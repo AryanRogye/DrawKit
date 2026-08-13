@@ -57,16 +57,20 @@ struct RectanglePoint: ShapePoint {
     
     let id: UUID
     var rect: CGRect
-    let color: Color
+    var color: Color
     var cornerRadius: CGFloat
+    var strokeWidth: CGFloat?
+    var strokeColor: Color?
     
-    init(id: UUID = UUID(), rect: CGRect, color: Color, cornerRadius: CGFloat) {
+    init(id: UUID = UUID(), rect: CGRect, color: Color, cornerRadius: CGFloat, strokeWidth: CGFloat?, strokeColor: Color?) {
         self.id = id
         self.rect = rect
         self.color = color
         self.cornerRadius = cornerRadius
+        self.strokeWidth = strokeWidth
+        self.strokeColor = strokeColor
     }
-    
+
     func mapped(
         from oldImageRect: CGRect,
         to newImageRect: CGRect
@@ -78,7 +82,9 @@ struct RectanglePoint: ShapePoint {
                 to: newImageRect
             ),
             color: color,
-            cornerRadius: cornerRadius
+            cornerRadius: cornerRadius,
+            strokeWidth: strokeWidth,
+            strokeColor: strokeColor
         )
     }
 }
@@ -87,12 +93,16 @@ struct CirclePoint: ShapePoint {
     
     let id: UUID
     var rect: CGRect
-    let color: Color
+    var color: Color
+    var strokeWidth: CGFloat?
+    var strokeColor: Color?
     
-    init(id: UUID = UUID(), rect: CGRect, color: Color) {
+    init(id: UUID = UUID(), rect: CGRect, color: Color, strokeWidth: CGFloat?, strokeColor: Color?) {
         self.id = id
         self.rect = rect
         self.color = color
+        self.strokeWidth = strokeWidth
+        self.strokeColor = strokeColor
     }
     
     func mapped(
@@ -105,7 +115,9 @@ struct CirclePoint: ShapePoint {
                 from: oldImageRect,
                 to: newImageRect
             ),
-            color: color
+            color: color,
+            strokeWidth: strokeWidth,
+            strokeColor: strokeColor
         )
     }
 }
@@ -114,12 +126,16 @@ struct TrianglePoint: ShapePoint {
     
     let id: UUID
     var rect: CGRect
-    let color: Color
+    var color: Color
+    var strokeWidth: CGFloat?
+    var strokeColor: Color?
     
-    init(id: UUID = UUID(), rect: CGRect, color: Color) {
+    init(id: UUID = UUID(), rect: CGRect, color: Color, strokeWidth: CGFloat?, strokeColor: Color?) {
         self.id = id
         self.rect = rect
         self.color = color
+        self.strokeWidth = strokeWidth
+        self.strokeColor = strokeColor
     }
     
     func mapped(
@@ -132,7 +148,9 @@ struct TrianglePoint: ShapePoint {
                 from: oldImageRect,
                 to: newImageRect
             ),
-            color: color
+            color: color,
+            strokeWidth: strokeWidth,
+            strokeColor: strokeColor
         )
     }
 }

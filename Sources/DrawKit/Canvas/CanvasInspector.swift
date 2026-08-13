@@ -23,19 +23,18 @@ public struct CanvasInspector: View {
                 Text(editor.items[selected.index].kind.rawValue)
                 
                 Section("Appearance") {
-                    if editor.items[selected.index].color != nil {
-                        InspectorOpacitySlider(
-                            editor: editor,
-                            selected: selected
-                        )
-                    }
-                    if let rectangle = editor.items[selected.index].shapePoint as? RectanglePoint {
-                        InspectorCornerRadiusSlider(
-                            editor: editor,
-                            rectangle: rectangle,
-                            selected: selected,
-                        )
-                    }
+                    InspectorOpacitySlider(
+                        editor: editor,
+                        selected: selected
+                    )
+                    InspectorStrokeColorWidth(
+                        editor: editor,
+                        selected: selected
+                    )
+                    InspectorCornerRadiusSlider(
+                        editor: editor,
+                        selected: selected,
+                    )
                 }
                 
                 if let shapePoint = editor.items[selected.index].shapePoint {
@@ -59,113 +58,130 @@ public struct CanvasInspector: View {
     }
 }
 
-private struct InspectorCornerRadiusSlider: View {
+// MARK: - Stroke Width/Color
+private struct InspectorStrokeColorWidth: View {
     
     @Bindable var editor: DrawEditor
-    let rectangle: RectanglePoint
     let selected: CanvasSelection
     
+    var index: Int {
+        selected.index
+    }
+    
     var body: some View {
-        LabeledContent("Corner Radius") {
-            Slider(
-                value: Binding(
-                    get: {
-                        guard editor.items.indices.contains(selected.index) else {
-                            return 1.0
+        VStack(alignment: .leading) {
+            if editor.items.indices.contains(index),
+               let strokeColor = editor.items[index].strokeColor,
+               let strokeWidth = editor.items[index].strokeWidth {
+                
+                ColorPicker(
+                    "Stroke Color",
+                    selection: Binding(
+                        get: {
+                            editor.items[index].strokeColor ?? strokeColor
+                        },
+                        set: {
+                            editor.items[index].setStrokeColor($0)
                         }
-                        return rectangle.cornerRadius
-                    },
-                    set: { radius in
-                        guard editor.items.indices.contains(selected.index) else {
-                            return
+                    )
+                )
+                
+                Slider(
+                    value: Binding(
+                        get: {
+                            editor.items[index].strokeWidth ?? strokeWidth
+                        },
+                        set: {
+                            editor.items[index].setStrokeWidth($0)
                         }
-                        editor.items[selected.index] = .rectangle(
-                            .init(
-                                id: rectangle.id,
-                                rect: rectangle.rect,
-                                color: rectangle.color,
-                                cornerRadius: radius
-                            )
-                        )
-                    }
-                ),
-                in: 0...(min(rectangle.rect.width, rectangle.rect.height) / 2),
-                step: 1
-            )
-            .labelsHidden()
-            .controlSize(.small)
-            .frame(width: 120)
+                    ),
+                    in: 0...10,
+                    step: 1
+                )
+                
+                Button("Disable Stroke") {
+                    editor.items[index].setStrokeWidth(nil)
+                    editor.items[index].setStrokeColor(nil)
+                }
+                
+            } else {
+                Button("Enable Stroke") {
+                    editor.items[index].setStrokeWidth(1)
+                    editor.items[index].setStrokeColor(.blue)
+                }
+            }
         }
     }
 }
 
+// MARK: - Corner Radius
+private struct InspectorCornerRadiusSlider: View {
+    
+    @Bindable var editor: DrawEditor
+    let selected: CanvasSelection
+    
+    var index: Int {
+        selected.index
+    }
+    
+    var body: some View {
+        if editor.items.indices.contains(index),
+           let cornerRadius = editor.items[index].cornerRadius,
+           let width = editor.items[index].width,
+           let height = editor.items[index].height
+        {
+            LabeledContent("Corner Radius") {
+                Slider(
+                    value: Binding(
+                        get: {
+                            cornerRadius
+                        },
+                        set: {
+                            editor.items[selected.index].setCornerRadius($0)
+                        }
+                    ),
+                    in: 0...(min(width, height) / 2),
+                    step: 1
+                )
+                .labelsHidden()
+                .controlSize(.small)
+                .frame(width: 120)
+            }
+        }
+    }
+}
+
+// MARK: - Opacity
 private struct InspectorOpacitySlider: View {
     
     @Bindable var editor: DrawEditor
     let selected: CanvasSelection
     
+    var index: Int {
+        selected.index
+    }
+    
     var body: some View {
-        LabeledContent("Opacity") {
-            Slider(
-                value: Binding(
-                    get: {
-                        guard editor.items.indices.contains(selected.index) else {
-                            return 1
+        if  editor.items.indices.contains(index),
+            let color = editor.items[index].color {
+            LabeledContent("Opacity") {
+                Slider(
+                    value: Binding(
+                        get: {
+                            return color.alpha
+                        },
+                        set: {
+                            editor.items[index].setOpacity($0)
                         }
-                        return editor.items[selected.index].color?.alpha ?? 1
-                    },
-                    set: { opacity in
-                        guard editor.items.indices.contains(selected.index),
-                              let color = editor.items[selected.index].color else {
-                            return
-                        }
-                        
-                        switch editor.items[selected.index] {
-                        case .circle(let shapePoint):
-                            let shape = CirclePoint(
-                                id: shapePoint.id,
-                                rect: shapePoint.rect,
-                                color: color.replacingAlpha(with: opacity)
-                            )
-                            editor.items[selected.index] = .circle(shape)
-                            
-                        case .rectangle(let shapePoint):
-                            let shape = RectanglePoint(
-                                id: shapePoint.id,
-                                rect: shapePoint.rect,
-                                color: color.replacingAlpha(with: opacity),
-                                cornerRadius: shapePoint.cornerRadius,
-                            )
-                            editor.items[selected.index] = .rectangle(shape)
-                            
-                        case .triangle(let shapePoint):
-                            let shape = TrianglePoint(
-                                id: shapePoint.id,
-                                rect: shapePoint.rect,
-                                color: color.replacingAlpha(with: opacity)
-                            )
-                            editor.items[selected.index] = .triangle(shape)
-                        case .pen(let penStroke):
-                            let stroke = PenStroke(
-                                id: penStroke.id,
-                                points: penStroke.points,
-                                color: penStroke.color.replacingAlpha(with: opacity),
-                                lineWidth: penStroke.lineWidth
-                            )
-                            editor.items[selected.index] = .pen(stroke)
-                            
-                        default:
-                            break
-                        }
-                    }
-                ),
-                in: 0...1,
-                step: 0.1
-            )
-            .labelsHidden()
-            .controlSize(.small)
-            .frame(width: 120)
+                    ),
+                    in: 0...1,
+                    step: 0.1
+                )
+                .labelsHidden()
+                .controlSize(.small)
+                .frame(width: 120)
+            }
+            
         }
-
     }
 }

@@ -15,6 +15,7 @@ extension DrawEditor {
     ) -> some Gesture {
         DragGesture()
             .onChanged { value in
+                guard self.selectedItem.kind != .pen else { return }
                 self.handleDrag(
                     shapePoint: shapePoint,
                     value: value,

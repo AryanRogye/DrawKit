@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import LocalShortcuts
 
 public struct DrawCanvas: View {
 
@@ -22,6 +23,7 @@ public struct DrawCanvas: View {
     @State private var magnificationStartOffset: CGSize = .zero
     @State private var isMagnifying = false
     @State private var activePenStrokeIndex: Int?
+    @State private var monitor: Any?
     
     public init(
         editor: DrawEditor,
@@ -53,6 +55,33 @@ public struct DrawCanvas: View {
                         afterSave: editor.afterSave,
                         onSave: onSave
                     )
+                    .onAppear {
+                        self.monitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown]) { event in
+                            
+                            if let shortcut = LocalShortcuts.Shortcut.from(event: event) {
+                                if shortcut == .init(modifier: [], keys: [.escape]) {
+                                    self.editor.canvasSelected = nil
+                                    self.editor.selectedItem = .none
+                                }
+                                if let selected = editor.canvasSelected,
+                                       shortcut == .init(modifier: [], keys: [.delete]) {
+                                    if editor.items.indices.contains(selected.index) {
+                                        editor.items.remove(at: selected.index)
+                                    }
+                                    editor.canvasSelected = nil
+                                    editor.selectedItem = .none
+                                }
+                            }
+                            
+                            return event
+                        }
+                    }
+                    .onDisappear {
+                        if let monitor {
+                            NSEvent.removeMonitor(monitor)
+                            self.monitor = nil
+                        }
+                    }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .clipShape(Path(CanvasHelpers.fittedImageRect(imageSize: editor.image.size, in: geometry.size)))
                     .scaleEffect(scale)

@@ -109,7 +109,6 @@ struct CanvasView: View {
             CanvasShape(
                 shape: RoundedRectangle(cornerRadius: shapePoint.cornerRadius),
                 shapePoint: shapePoint,
-                
                 selected: selected
             )
             .gesture(editor.dragGesture(for: shapePoint, index: index, kind: .rectangle))

@@ -38,15 +38,34 @@ extension DrawEditor {
         guard let canvasSelected else { return }
         let index = canvasSelected.index
         if case .rectangle(let shapePoint) = items[index] {
-            let s: RectanglePoint = .init(id: shapePoint.id, rect: shapePoint.rect, color: color, cornerRadius: shapePoint.cornerRadius)
+            let s: RectanglePoint = .init(
+                id: shapePoint.id,
+                rect: shapePoint.rect,
+                color: color,
+                cornerRadius: shapePoint.cornerRadius,
+                strokeWidth: shapePoint.strokeWidth,
+                strokeColor: shapePoint.strokeColor
+            )
             items[index] = .rectangle(s)
         }
         if case .circle(let shapePoint) = items[index] {
-            let s: CirclePoint = .init(id: shapePoint.id, rect: shapePoint.rect, color: color)
+            let s: CirclePoint = .init(
+                id: shapePoint.id,
+                rect: shapePoint.rect,
+                color: color,
+                strokeWidth: shapePoint.strokeWidth,
+                strokeColor: shapePoint.strokeColor
+            )
             items[index] = .circle(s)
         }
         if case .triangle(let shapePoint) = items[index] {
-            let s: TrianglePoint = .init(id: shapePoint.id, rect: shapePoint.rect, color: color)
+            let s: TrianglePoint = .init(
+                id: shapePoint.id,
+                rect: shapePoint.rect,
+                color: color,
+                strokeWidth: shapePoint.strokeWidth,
+                strokeColor: shapePoint.strokeColor
+            )
             items[index] = .triangle(s)
         }
     }
@@ -81,13 +100,33 @@ extension DrawEditor {
             )
             selectedItem = .pen(pen)
         case .rectangle:
-            selectedItem = .rectangle(.init(rect: center, color: color, cornerRadius: 0))
+            selectedItem = .rectangle(.init(
+                rect: center,
+                color: color,
+                cornerRadius: 0,
+                strokeWidth: nil,
+                strokeColor: nil
+            ))
             items.append(selectedItem)
         case .circle:
-            selectedItem = .circle(.init(rect: center, color: color))
+            selectedItem = .circle(
+                .init(
+                    rect: center,
+                    color: color,
+                    strokeWidth: nil,
+                    strokeColor: nil
+                )
+            )
             items.append(selectedItem)
         case .triangle:
-            selectedItem = .triangle(.init(rect: center, color: color))
+            selectedItem = .triangle(
+                .init(
+                    rect: center,
+                    color: color,
+                    strokeWidth: nil,
+                    strokeColor: nil
+                )
+            )
             items.append(selectedItem)
         }
     }
