@@ -12,7 +12,7 @@ extension View {
         scale: Binding<CGFloat>,
         offset: Binding<CGSize>,
         lastScale: Binding<CGFloat>,
-        zoomAnchor: Binding<UnitPoint>,
+        magnificationStartOffset: Binding<CGSize>,
         isMagnifying: Binding<Bool>,
         canvasSize: CGSize
     ) -> some View {
@@ -22,7 +22,7 @@ extension View {
                     scale: scale,
                     offset: offset,
                     lastScale: lastScale,
-                    zoomAnchor: zoomAnchor,
+                    magnificationStartOffset: magnificationStartOffset,
                     isMagnifying: isMagnifying,
                     canvasSize: canvasSize
                 )
@@ -35,7 +35,7 @@ private struct GestureModifier: ViewModifier {
     @Binding var scale: CGFloat
     @Binding var offset: CGSize
     @Binding var lastScale: CGFloat
-    @Binding var zoomAnchor: UnitPoint
+    @Binding var magnificationStartOffset: CGSize
     @Binding var isMagnifying: Bool
     let canvasSize: CGSize
     let gestures = CanvasGestures()
@@ -47,12 +47,13 @@ private struct GestureModifier: ViewModifier {
                     scale: $scale,
                     offset: $offset,
                     lastScale: $lastScale,
-                    zoomAnchor: $zoomAnchor,
+                    magnificationStartOffset: $magnificationStartOffset,
                     isMagnifying: $isMagnifying,
                     canvasSize: canvasSize
                 )
             )
             .omnidirectionalPanGesture { dx, dy, phase in
+                guard !isMagnifying else { return }
                 offset.width += dx
                 offset.height += dy
             }

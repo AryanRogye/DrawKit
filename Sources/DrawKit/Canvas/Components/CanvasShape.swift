@@ -9,7 +9,7 @@ import SwiftUI
 
 struct CanvasShape<S: Shape>: View {
     let shape: S
-    let shapePoint: ShapePoint
+    let shapePoint: any ShapePoint
     let selected: Bool
     
     var body: some View {
@@ -20,15 +20,6 @@ struct CanvasShape<S: Shape>: View {
                 width: shapePoint.width,
                 height: shapePoint.height
             )
-            .overlay {
-                if selected {
-                    shape
-                        .stroke(
-                            Color.accentColor,
-                            style: .init(lineWidth: 2)
-                        )
-                }
-            }
             .position(shapePoint.position)
         
     }

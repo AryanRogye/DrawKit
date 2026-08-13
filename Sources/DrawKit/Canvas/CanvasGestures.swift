@@ -12,49 +12,45 @@ final class CanvasGestures {
         scale: Binding<CGFloat>,
         offset: Binding<CGSize>,
         lastScale: Binding<CGFloat>,
-        zoomAnchor: Binding<UnitPoint>,
+        magnificationStartOffset: Binding<CGSize>,
         isMagnifying: Binding<Bool>,
         canvasSize: CGSize
     ) -> some Gesture {
         MagnifyGesture()
             .onChanged { value in
                 if !isMagnifying.wrappedValue {
-                    offset.wrappedValue = self.compensatedOffset(
-                        offset.wrappedValue,
-                        scale: scale.wrappedValue,
-                        from: zoomAnchor.wrappedValue,
-                        to: value.startAnchor,
-                        canvasSize: canvasSize
-                    )
-                    zoomAnchor.wrappedValue = value.startAnchor
+                    magnificationStartOffset.wrappedValue = offset.wrappedValue
                     isMagnifying.wrappedValue = true
                 }
-                scale.wrappedValue = min(
+
+                let startScale = lastScale.wrappedValue
+                let newScale = min(
                     max(lastScale.wrappedValue * value.magnification, 0.5),
                     5.0
                 )
+                let scaleRatio = newScale / startScale
+                let pinchPoint = CGPoint(
+                    x: value.startAnchor.x * canvasSize.width,
+                    y: value.startAnchor.y * canvasSize.height
+                )
+                let canvasCenter = CGPoint(
+                    x: canvasSize.width / 2,
+                    y: canvasSize.height / 2
+                )
+                let startOffset = magnificationStartOffset.wrappedValue
+
+                // Keep the content beneath the pinch point stationary while scaling.
+                offset.wrappedValue = CGSize(
+                    width: startOffset.width + (1 - scaleRatio)
+                        * (pinchPoint.x - canvasCenter.x - startOffset.width),
+                    height: startOffset.height + (1 - scaleRatio)
+                        * (pinchPoint.y - canvasCenter.y - startOffset.height)
+                )
+                scale.wrappedValue = newScale
             }
-            .onEnded { value in
+            .onEnded { _ in
                 isMagnifying.wrappedValue = false
                 lastScale.wrappedValue = scale.wrappedValue
             }
-    }
-
-    private func compensatedOffset(
-        _ offset: CGSize,
-        scale: CGFloat,
-        from oldAnchor: UnitPoint,
-        to newAnchor: UnitPoint,
-        canvasSize: CGSize
-    ) -> CGSize {
-        let anchorDelta = CGSize(
-            width: (oldAnchor.x - newAnchor.x) * canvasSize.width,
-            height: (oldAnchor.y - newAnchor.y) * canvasSize.height
-        )
-
-        return CGSize(
-            width: offset.width + (1 - scale) * anchorDelta.width,
-            height: offset.height + (1 - scale) * anchorDelta.height
-        )
     }
 }

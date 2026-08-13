@@ -9,7 +9,7 @@ import SwiftUI
 
 extension DrawEditor {
     func dragGesture(
-        for shapePoint: ShapePoint,
+        for shapePoint: any ShapePoint,
         index: Int,
         kind: MarkupRawKind
     ) -> some Gesture {
@@ -28,7 +28,7 @@ extension DrawEditor {
     }
     
     func resizeGesture(
-        for shapePoint: ShapePoint,
+        for shapePoint: any ShapePoint,
         handle: ResizeHandle
     ) -> some Gesture {
         DragGesture()
@@ -45,7 +45,7 @@ extension DrawEditor {
     }
     
     func handleDrag(
-        shapePoint: ShapePoint,
+        shapePoint: any ShapePoint,
         value: DragGesture.Value,
         index: Int,
         kind: MarkupRawKind,
@@ -63,18 +63,24 @@ extension DrawEditor {
         )
         switch kind {
         case .rectangle:
-            items[index] = .rectangle(shape)
+            if let shape = shape as? RectanglePoint {
+                items[index] = .rectangle(shape)
+            }
         case .circle:
-            items[index] = .circle(shape)
+            if let shape = shape as? CirclePoint {
+                items[index] = .circle(shape)
+            }
         case .triangle:
-            items[index] = .triangle(shape)
+            if let shape = shape as? TrianglePoint {
+                items[index] = .triangle(shape)
+            }
         default: break
         }
     }
     
     func handleResize(
         value: DragGesture.Value,
-        shapePoint: ShapePoint,
+        shapePoint: any ShapePoint,
         handle: ResizeHandle
     ) {
         if resizeStartRect == nil {
@@ -130,11 +136,17 @@ extension DrawEditor {
         
         switch items[selection.index] {
         case .rectangle:
-            items[selection.index] = .rectangle(shape)
+            if let shape = shape as? RectanglePoint {
+                items[selection.index] = .rectangle(shape)
+            }
         case .circle:
-            items[selection.index] = .circle(shape)
+            if let shape = shape as? CirclePoint {
+                items[selection.index] = .circle(shape)
+            }
         case .triangle:
-            items[selection.index] = .triangle(shape)
+            if let shape = shape as? TrianglePoint {
+                items[selection.index] = .triangle(shape)
+            }
         default:
             break
         }

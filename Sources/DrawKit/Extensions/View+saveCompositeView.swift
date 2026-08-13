@@ -12,6 +12,8 @@ extension View {
         save: Binding<Bool>,
         canvasSize: CGSize,
         imageSize: CGSize,
+        beforeSave: (@escaping () -> Void) = { },
+        afterSave: (@escaping () -> Void) = { },
         onSave: @escaping (NSImage?) -> Void
     ) -> some View {
         self
@@ -23,6 +25,8 @@ extension View {
                     in: canvasSize
                 ),
                 outputSize: imageSize,
+                beforeSave: beforeSave,
+                afterSave: afterSave,
                 onSave
             )
     }
@@ -34,6 +38,8 @@ private extension View {
         canvasSize: CGSize,
         imageRect: CGRect,
         outputSize: CGSize,
+        beforeSave: (@escaping () -> Void),
+        afterSave: (@escaping () -> Void),
         _ imageCompletion: @escaping (NSImage?) -> Void
     ) -> some View {
         self.onChange(of: didTriggerSave.wrappedValue) { _, shouldSave in
@@ -48,7 +54,8 @@ private extension View {
                     didTriggerSave.wrappedValue = false
                     return
                 }
-                
+                beforeSave()
+
                 let cropOffset = CGSize(
                     width: (canvasSize.width / 2) - imageRect.midX,
                     height: (canvasSize.height / 2) - imageRect.midY
@@ -75,6 +82,7 @@ private extension View {
                 } else {
                     imageCompletion(nil)
                 }
+                afterSave()
                 didTriggerSave.wrappedValue = false
             }
         }

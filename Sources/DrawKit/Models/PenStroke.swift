@@ -26,4 +26,25 @@ struct PenStroke: Identifiable, Hashable {
         self.color = color
         self.lineWidth = lineWidth
     }
+
+    func mapped(
+        from oldImageRect: CGRect,
+        to newImageRect: CGRect
+    ) -> PenStroke {
+        let scaleX = newImageRect.width / oldImageRect.width
+        let scaleY = newImageRect.height / oldImageRect.height
+        let mappedPoints = points.map { point in
+            CGPoint(
+                x: newImageRect.minX + ((point.x - oldImageRect.minX) * scaleX),
+                y: newImageRect.minY + ((point.y - oldImageRect.minY) * scaleY)
+            )
+        }
+
+        return PenStroke(
+            id: id,
+            points: mappedPoints,
+            color: color,
+            lineWidth: lineWidth
+        )
+    }
 }

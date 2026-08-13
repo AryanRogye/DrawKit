@@ -8,6 +8,8 @@
 import SwiftUI
 
 public struct DrawCanvas: View {
+
+    private static let viewportCoordinateSpace = "DrawKit.DrawCanvas.viewport"
     
     @Bindable var editor: DrawEditor
     @Binding var save: Bool
@@ -17,8 +19,9 @@ public struct DrawCanvas: View {
     @State private var scale: CGFloat = 1.0
     @State private var offset: CGSize = .zero
     @State private var lastScale: CGFloat = 1.0
-    @State private var zoomAnchor: UnitPoint = .center
+    @State private var magnificationStartOffset: CGSize = .zero
     @State private var isMagnifying = false
+    @State private var activePenStrokeIndex: Int?
     
     public init(
         editor: DrawEditor,
@@ -39,30 +42,103 @@ public struct DrawCanvas: View {
     }
     
     public var body: some View {
-        GeometryReader { geometry in
-            CanvasView(editor: editor, scale: $scale)
-                .saveView(
-                    save: $save,
-                    canvasSize: geometry.size,
-                    imageSize: editor.image.size,
-                    onSave: onSave
-                )
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .clipShape(Path(CanvasHelpers.fittedImageRect(imageSize: editor.image.size, in: geometry.size)))
-                .scaleEffect(scale, anchor: zoomAnchor)
-                .offset(offset)
-                .onAppear {
-                    editor.canvasSize = geometry.size
+        NavigationStack {
+            GeometryReader { geometry in
+                CanvasView(editor: editor, scale: $scale)
+                    .saveView(
+                        save: $save,
+                        canvasSize: geometry.size,
+                        imageSize: editor.image.size,
+                        beforeSave: editor.beforeSave,
+                        afterSave: editor.afterSave,
+                        onSave: onSave
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .clipShape(Path(CanvasHelpers.fittedImageRect(imageSize: editor.image.size, in: geometry.size)))
+                    .scaleEffect(scale)
+                    .offset(offset)
+                    .onAppear {
+                        editor.updateCanvasSize(geometry.size)
+                    }
+                    .onChange(of: geometry.size) { _, newSize in
+                        editor.updateCanvasSize(newSize)
+                    }
+                    .if(editor.selectedItem.kind == .pen) {
+                        $0.simultaneousGesture(
+                            DragGesture(coordinateSpace: .named(Self.viewportCoordinateSpace))
+                                .onChanged { value in
+                                    let startLocation = canvasLocation(
+                                        for: value.startLocation,
+                                        canvasSize: geometry.size
+                                    )
+                                    let location = canvasLocation(
+                                        for: value.location,
+                                        canvasSize: geometry.size
+                                    )
+
+                                    if activePenStrokeIndex == nil {
+                                        guard case .pen(let pen) = editor.selectedItem else { return }
+
+                                        let stroke = PenStroke(
+                                            id: UUID(),
+                                            points: [startLocation],
+                                            color: pen.color,
+                                            lineWidth: pen.lineWidth
+                                        )
+                                        editor.items.append(.pen(stroke))
+                                        activePenStrokeIndex = editor.items.count - 1
+                                    }
+
+                                    guard let index = activePenStrokeIndex,
+                                          editor.items.indices.contains(index),
+                                          case .pen(var stroke) = editor.items[index] else { return }
+
+                                    stroke.points.append(location)
+                                    editor.items[index] = .pen(stroke)
+                                }
+                                .onEnded { _ in
+                                    activePenStrokeIndex = nil
+                                }
+                        )
+                    }
+                    .canvasNavigationGestures(
+                        scale: $scale,
+                        offset: $offset,
+                        lastScale: $lastScale,
+                        magnificationStartOffset: $magnificationStartOffset,
+                        isMagnifying: $isMagnifying,
+                        canvasSize: geometry.size
+                    )
+            }
+            .coordinateSpace(name: Self.viewportCoordinateSpace)
+            .inspector(isPresented: Binding(
+                get: { editor.canvasSelected != nil },
+                set: { isPresented in
+                    if !isPresented {
+                        editor.canvasSelected = nil
+                    }
                 }
-                .canvasNavigationGestures(
-                    scale: $scale,
-                    offset: $offset,
-                    lastScale: $lastScale,
-                    zoomAnchor: $zoomAnchor,
-                    isMagnifying: $isMagnifying,
-                    canvasSize: geometry.size
-                )
+            )) {
+                CanvasInspector(editor: editor)
+            }
         }
     }
-    
+
+    private func canvasLocation(
+        for viewportLocation: CGPoint,
+        canvasSize: CGSize
+    ) -> CGPoint {
+        let canvasCenter = CGPoint(
+            x: canvasSize.width / 2,
+            y: canvasSize.height / 2
+        )
+        let safeScale = max(scale, 0.01)
+
+        return CGPoint(
+            x: canvasCenter.x
+                + (viewportLocation.x - canvasCenter.x - offset.width) / safeScale,
+            y: canvasCenter.y
+                + (viewportLocation.y - canvasCenter.y - offset.height) / safeScale
+        )
+    }
 }
