@@ -145,6 +145,14 @@ private struct InspectorOpacitySlider: View {
                                 color: color.replacingAlpha(with: opacity)
                             )
                             editor.items[selected.index] = .triangle(shape)
+                        case .pen(let penStroke):
+                            let stroke = PenStroke(
+                                id: penStroke.id,
+                                points: penStroke.points,
+                                color: penStroke.color.replacingAlpha(with: opacity),
+                                lineWidth: penStroke.lineWidth
+                            )
+                            editor.items[selected.index] = .pen(stroke)
                             
                         default:
                             break

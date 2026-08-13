@@ -93,6 +93,7 @@ public struct DrawCanvas: View {
                                           editor.items.indices.contains(index),
                                           case .pen(var stroke) = editor.items[index] else { return }
 
+                                    stroke.lineWidth = editor.lineWidth
                                     stroke.points.append(location)
                                     editor.items[index] = .pen(stroke)
                                 }

@@ -8,6 +8,22 @@
 import SwiftUI
 
 extension DrawEditor {
+    public func changePenLineWidth(to lineWidth: CGFloat) {
+        self.lineWidth = lineWidth
+
+        if case .pen(var pen) = selectedItem {
+            pen.lineWidth = lineWidth
+            selectedItem = .pen(pen)
+        }
+
+        guard let selected = canvasSelected,
+              items.indices.contains(selected.index),
+              case .pen(var stroke) = items[selected.index] else { return }
+
+        stroke.lineWidth = lineWidth
+        items[selected.index] = .pen(stroke)
+    }
+
     public func changeSelectedColorIfNeeded(_ color: Color) {
         if case .pen(let pen) = selectedItem {
             selectedItem = .pen(PenStroke(
@@ -61,7 +77,7 @@ extension DrawEditor {
                 id: UUID(),
                 points: [],
                 color: color,
-                lineWidth: 1
+                lineWidth: lineWidth
             )
             selectedItem = .pen(pen)
         case .rectangle:

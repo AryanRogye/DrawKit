@@ -62,6 +62,8 @@ struct CanvasView: View {
             ))
         )
         .onTapGesture {
+            // dont allow selected while selected is pen
+            guard editor.selectedItem.kind != .pen else { return }
             editor.canvasSelected = .init(index: index, id: stroke.id)
         }
     }

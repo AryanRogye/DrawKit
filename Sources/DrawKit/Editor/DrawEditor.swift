@@ -23,6 +23,7 @@ public final class DrawEditor {
     
     internal var resizeStartRect: CGRect?
     internal var dragStartRect: CGRect?
+    var lineWidth: CGFloat = 1
     
     public init(image: NSImage) {
         self.image = image
