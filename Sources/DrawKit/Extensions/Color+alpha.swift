@@ -9,16 +9,9 @@ import SwiftUI
 
 extension Color {
     var alpha: Double {
-        let nsColor = NSColor(self)
-        
-        guard let rgb = nsColor.usingColorSpace(.deviceRGB) else {
-            return 1
+        if let rgba = self.rgba {
+            return Double(rgba.a)
         }
-        
-        return Double(rgb.alphaComponent)
-    }
-
-    func replacingAlpha(with alpha: Double) -> Color {
-        Color(NSColor(self).withAlphaComponent(alpha))
+        return 1
     }
 }

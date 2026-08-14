@@ -204,7 +204,7 @@ private struct ColorCircle: View {
                 .fill(color)
                 .padding(2)
                 .overlay {
-                    if selected.equals(color) {
+                    if selected.equals(color, ignoreAlpha: true) {
                         Circle()
                             .stroke(.blue)
                     }
@@ -241,37 +241,5 @@ private struct CanvasControlsShape<Selection: Shape>: View {
                         .fill(Color.accentColor.opacity(0.2))
                 }
             }
-    }
-}
-
-extension Color {
-    
-    private struct RGBA: Equatable {
-        let r: CGFloat
-        let g: CGFloat
-        let b: CGFloat
-        let a: CGFloat
-    }
-    
-    private var rgba: RGBA? {
-        let nsColor = NSColor(self)
-        
-        guard let rgb = nsColor.usingColorSpace(.deviceRGB) else {
-            return nil
-        }
-        
-        let red = rgb.redComponent
-        let green = rgb.greenComponent
-        let blue = rgb.blueComponent
-        let alpha = rgb.alphaComponent
-
-        return RGBA(r: red, g: green, b: blue, a: alpha)
-    }
-    
-    func equals(_ color: Color) -> Bool {
-        
-        guard let s_rgba = self.rgba, let c_rgba = color.rgba else { return false }
-        
-        return s_rgba == c_rgba
     }
 }

@@ -14,7 +14,7 @@ struct CanvasView: View {
     
     var body: some View {
         ZStack {
-            Image(nsImage: editor.image)
+            Image(image: editor.image)
                 .resizable()
                 .scaledToFit()
                 .onTapGesture {

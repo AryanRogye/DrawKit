@@ -23,9 +23,11 @@ extension View {
         )
     }
 #elseif os(iOS)
-    func omnidirectionalPanGesture(action: @escaping (_ dx: CGFloat, _ dy: CGFloat, _ phase: NSEvent.Phase) -> Void) -> some View {
-        OmnidirectionalPanGestureRepresentable(action: action)
-            .frame(width: 0, height: 0)
+    func omnidirectionalPanGesture(action: @escaping (_ dx: CGFloat, _ dy: CGFloat, _ phase: UIGestureRecognizer.State) -> Void) -> some View {
+        background {
+            OmnidirectionalPanGestureRepresentable(action: action)
+                .frame(width: 0, height: 0)
+        }
     }
 #endif
 }
@@ -100,7 +102,7 @@ private struct OmnidirectionalPanGestureRepresentable: NSViewRepresentable {
 #if os(iOS)
 
 private struct OmnidirectionalPanGestureRepresentable: UIViewRepresentable {
-    let action: (CGFloat, CGFloat) -> Void
+    let action: (CGFloat, CGFloat, UIGestureRecognizer.State) -> Void
     
     func makeCoordinator() -> Coordinator {
         Coordinator(action: action)
@@ -122,11 +124,17 @@ private struct OmnidirectionalPanGestureRepresentable: UIViewRepresentable {
     func updateUIView(_ uiView: UIView, context: Context) {}
     
     final class Coordinator: NSObject {
-        let action: (CGFloat, CGFloat) -> Void
+        let action: (CGFloat, CGFloat, UIGestureRecognizer.State) -> Void
         
         private var lastTranslation: CGPoint = .zero
         
-        init(action: @escaping (CGFloat, CGFloat) -> Void) {
+        init(
+            action: @escaping (
+                CGFloat,
+                CGFloat,
+                UIGestureRecognizer.State
+            ) -> Void
+        ) {
             self.action = action
         }
         
@@ -137,7 +145,7 @@ private struct OmnidirectionalPanGestureRepresentable: UIViewRepresentable {
             let dx = translation.x - lastTranslation.x
             let dy = translation.y - lastTranslation.y
             
-            action(dx, dy)
+            action(dx, dy, gesture.state)
             
             switch gesture.state {
             case .ended, .cancelled, .failed:

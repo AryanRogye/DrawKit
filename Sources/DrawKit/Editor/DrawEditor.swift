@@ -7,13 +7,12 @@
 
 import Foundation
 import SwiftUI
-import AppKit
 
 @Observable
 @MainActor
 public final class DrawEditor {
 
-    let image: NSImage
+    let image: SystemImage
     var canvasSize: CGSize?
     
     var items: [MarkupItems] = []
@@ -25,7 +24,7 @@ public final class DrawEditor {
     internal var dragStartRect: CGRect?
     var lineWidth: CGFloat = 1
     
-    public init(image: NSImage) {
+    public init(image: SystemImage) {
         self.image = image
     }
     

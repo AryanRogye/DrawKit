@@ -14,7 +14,7 @@ extension View {
         imageSize: CGSize,
         beforeSave: (@escaping () -> Void) = { },
         afterSave: (@escaping () -> Void) = { },
-        onSave: @escaping (NSImage?) -> Void
+        onSave: @escaping (SystemImage?) -> Void
     ) -> some View {
         self
             .saveCompositeView(
@@ -40,9 +40,10 @@ private extension View {
         outputSize: CGSize,
         beforeSave: (@escaping () -> Void),
         afterSave: (@escaping () -> Void),
-        _ imageCompletion: @escaping (NSImage?) -> Void
+        _ imageCompletion: @escaping (SystemImage?) -> Void
     ) -> some View {
         self.onChange(of: didTriggerSave.wrappedValue) { _, shouldSave in
+            #if os(macOS)
             if shouldSave {
                 guard canvasSize.width > 0,
                       canvasSize.height > 0,
@@ -85,6 +86,43 @@ private extension View {
                 afterSave()
                 didTriggerSave.wrappedValue = false
             }
+            #elseif os(iOS)
+            if shouldSave {
+                guard canvasSize.width > 0,
+                      canvasSize.height > 0,
+                      imageRect.width > 0,
+                      imageRect.height > 0,
+                      outputSize.width > 0,
+                      outputSize.height > 0 else {
+                    imageCompletion(nil)
+                    didTriggerSave.wrappedValue = false
+                    return
+                }
+                
+                beforeSave()
+                
+                let cropOffset = CGSize(
+                    width: (canvasSize.width / 2) - imageRect.midX,
+                    height: (canvasSize.height / 2) - imageRect.midY
+                )
+                
+                let exportView = self
+                    .frame(width: canvasSize.width, height: canvasSize.height)
+                    .offset(cropOffset)
+                    .frame(width: imageRect.width, height: imageRect.height)
+                    .clipped()
+                
+                let renderer = ImageRenderer(content: exportView)
+                renderer.proposedSize = ProposedViewSize(imageRect.size)
+                
+                renderer.scale = outputSize.width / imageRect.width
+                
+                imageCompletion(renderer.uiImage)
+                
+                afterSave()
+                didTriggerSave.wrappedValue = false
+            }
+            #endif
         }
     }
 }
