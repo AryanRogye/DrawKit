@@ -25,32 +25,25 @@ struct ContentView: View {
         VStack {
             if let drawEditorControls {
                 DrawCanvas(editor: drawEditorControls, save: $save) { image in
-//                    guard let image else {
-//                        self.error = "No image to save."
-//                        self.showError = true
-//                        return
-//                    }
-//                    let panel = NSSavePanel()
-//                    panel.allowedContentTypes = [.png]
-//                    panel.nameFieldStringValue = "Untitled.png"
-//                    panel.canCreateDirectories = true
-//                    panel.title = "Save Image"
-//                    
-//                    // beginSheetModal(for:) is better if you have a window to attach to
-//                    panel.begin { response in
-//                        guard response == .OK, let url = panel.url else { return }
-//                        do {
-//                            guard let tiff = image.tiffRepresentation,
-//                                  let bitmap = NSBitmapImageRep(data: tiff),
-//                                  let data = bitmap.representation(using: .png, properties: [:]) else {
-//                                throw CocoaError(.fileWriteUnknown)
-//                            }
-//                            try data.write(to: url)
-//                        } catch {
-//                            self.error = "Error Saving: \(error.localizedDescription)"
-//                            self.showError = true
-//                        }
-//                    }
+                    guard let image else {
+                        self.error = "No image to save."
+                        self.showError = true
+                        return
+                    }
+                    
+                    PHPhotoLibrary.shared().performChanges {
+                        PHAssetChangeRequest.creationRequestForAsset(from: image)
+                    } completionHandler: { success, error in
+                        Task { @MainActor in
+                            if let error {
+                                self.error = "Error Saving Image: \(error.localizedDescription)"
+                                self.showError = true
+                            } else if !success {
+                                self.error = "Could not save the image."
+                                self.showError = true
+                            }
+                        }
+                    }
                 }
                 DrawCanvasControls(editor: drawEditorControls)
             }

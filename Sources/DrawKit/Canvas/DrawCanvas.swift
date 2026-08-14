@@ -145,6 +145,7 @@ public struct DrawCanvas: View {
                     )
             }
             .coordinateSpace(name: Self.viewportCoordinateSpace)
+#if os(macOS)
             .inspector(isPresented: Binding(
                 get: { editor.canvasSelected != nil },
                 set: { isPresented in
@@ -155,6 +156,15 @@ public struct DrawCanvas: View {
             )) {
                 CanvasInspector(editor: editor)
             }
+#elseif os(iOS)
+            .safeAreaInset(edge: .bottom) {
+                if editor.canvasSelected != nil {
+                    CanvasInspector(editor: editor)
+                        .frame(height: 150)
+                        .padding()
+                }
+            }
+#endif
         }
     }
 
