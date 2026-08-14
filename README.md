@@ -1,6 +1,6 @@
 # DrawKit
 
-DrawKit is an embeddable SwiftUI image editor package for macOS. Add its editor canvas and controls directly to your own app to provide freehand drawing, editable shapes, selection tools, zooming, and composited image export without building a markup editor from scratch.
+DrawKit is an embeddable SwiftUI image editor package for iOS and macOS. Add its editor canvas and controls directly to your own app to provide freehand drawing, editable shapes, selection tools, zooming, and composited image export without building a markup editor from scratch.
 
 <img width="604" height="392.5" alt="DrawKit image markup editor" src="https://github.com/user-attachments/assets/0e9a0dcf-f908-473d-9418-db87d2a4f2ca" />
 
@@ -14,10 +14,11 @@ DrawKit is an embeddable SwiftUI image editor package for macOS. Add its editor 
 - Edit item opacity and rectangle corner radius in the inspector.
 - Pan and zoom while keeping drawing input aligned with the pointer.
 - Preserve markup positions when the canvas changes size.
-- Export the image and its markup as an `NSImage`.
+- Export the image and its markup as a `UIImage` on iOS or an `NSImage` on macOS.
 
 ## Requirements
 
+- iOS 18 or later
 - macOS 15 or later
 - Swift 6.4 or later
 - Xcode with Swift 6.4 support
@@ -54,12 +55,11 @@ Then add `DrawKit` to the dependencies of your target:
 
 ## Usage
 
-DrawKit does not provide a standalone app or force a particular editor layout. Its canvas and controls are regular SwiftUI views that you can embed anywhere in your own window, sheet, navigation flow, or custom interface.
+DrawKit does not provide a standalone app or force a particular editor layout. Its canvas and controls are regular SwiftUI views that you can embed anywhere in your own screen, window, sheet, navigation flow, or custom interface.
 
 Create one `DrawEditor` for the image being edited, then pass that shared editor to `DrawCanvas` and `DrawCanvasControls`. Your app owns the surrounding layout, image import, save destination, and presentation behavior.
 
 ```swift
-import AppKit
 import DrawKit
 import SwiftUI
 
@@ -67,7 +67,7 @@ struct MarkupEditorView: View {
     @State private var editor: DrawEditor
     @State private var shouldSave = false
 
-    init(image: NSImage) {
+    init(image: SystemImage) {
         _editor = State(initialValue: DrawEditor(image: image))
     }
 
@@ -86,8 +86,8 @@ struct MarkupEditorView: View {
         }
     }
 
-    private func save(_ image: NSImage) {
-        // Write the rendered image or present an NSSavePanel here.
+    private func save(_ image: SystemImage) {
+        // Persist or share the rendered UIImage/NSImage here.
     }
 }
 ```
@@ -111,11 +111,11 @@ DrawCanvas(editor: editor, save: $shouldSave) { image in
         return
     }
 
-    // Persist or share the NSImage.
+    // Persist or share the UIImage/NSImage.
 }
 ```
 
-See `DrawKitExample` for an end-to-end example that imports an image with `fileImporter` and saves the rendered result as PNG.
+See `iOSDrawKitExample` for an iOS example using `PhotosPicker`, or `DrawKitExample` for a macOS example that imports an image with `fileImporter` and saves the rendered result as PNG.
 
 ## License
 
