@@ -93,6 +93,7 @@ public struct PenShape: View {
                 style: .init(lineWidth: 0.1)
             )
         }
+        .drawingGroup()
 #if DEBUG
         .popover(isPresented: .constant(isPopover)) {
             VStack {

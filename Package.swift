@@ -34,6 +34,10 @@ let package = Package(
                 .enableUpcomingFeature("ApproachableConcurrency"),
             ],
         ),
+        .testTarget(
+            name: "DrawKitTests",
+            dependencies: ["DrawKit"]
+        ),
 
     ]
 )

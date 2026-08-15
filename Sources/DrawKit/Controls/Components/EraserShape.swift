@@ -8,20 +8,46 @@
 import SwiftUI
 
 private enum EraserColor {
-    static let right = Color(hex: "#C2767D")!
-    static let top = Color(hex: "#E8899D")!
+    static let right = LinearGradient(
+        stops: [
+            .init(color: Color(hex: "#C46F75")!, location: 0),
+            .init(color: Color(hex: "#C66F79")!, location: 0.5),
+            .init(color: Color(hex: "#B17B87")!, location: 1)
+        ],
+        startPoint: .leading,
+        endPoint: .trailing
+    )
+
+    static let top = LinearGradient(
+        stops: [
+            .init(
+                color: Color(hex: "#E78D9F")!,
+                location: 0.0
+            ),
+            .init(
+                color: Color(hex: "#E4879E")!,
+                location: 0.3
+            ),
+            .init(
+                color: Color(hex: "#E88B9F")!,
+                location: 0.7
+            )
+        ],
+        startPoint: .top,
+        endPoint: .bottom
+    )
     static let bottom = Color(hex: "#F395AC")!
 }
 
 struct EraserShape: View {
-    @State private var paddingTop: CGFloat = 20
+    @State private var paddingTop: CGFloat = 17
     @State private var paddingRight: CGFloat = 3
-    @State private var cornerRadius: CGFloat = 10
+    @State private var cornerRadius: CGFloat = 12
     @State private var bottomRightCornerRadius: CGFloat = 15
     @State private var bottomLeftCornerRadius: CGFloat = 4
 
 #if DEBUG
-    let isPopover: Bool = true
+    let isPopover: Bool = false
 #endif
 
     var body: some View {
@@ -48,6 +74,7 @@ struct EraserShape: View {
             )
             .fill(EraserColor.bottom)
         }
+        .drawingGroup()
 #if DEBUG
         #if os(macOS)
         .popover(isPresented: .constant(isPopover)) {
@@ -128,7 +155,7 @@ struct EraserRightShape: Shape {
         let bottomLeftCurveX = rightInsetX - (cornerRadius * 2)
 
         let topRight = CGPoint(
-            x: rect.maxX,
+            x: rect.maxX - 0.1,
             y: rect.minY
         )
         let bottomRight = CGPoint(
@@ -158,7 +185,7 @@ struct EraserRightShape: Shape {
         )
 
         let topLeft = CGPoint(
-            x: rightInsetX,
+            x: rightInsetX - 0.5,
             y: rect.minY + paddingTop
         )
 

@@ -23,6 +23,7 @@ public struct DrawCanvas: View {
     @State private var magnificationStartOffset: CGSize = .zero
     @State private var isMagnifying = false
     @State private var activePenStrokeIndex: Int?
+    @State private var activeEraserLocation: CGPoint?
 #if os(macOS)
     @State private var monitor: Any?
 #endif
@@ -133,6 +134,36 @@ public struct DrawCanvas: View {
                                 .onEnded { _ in
                                     activePenStrokeIndex = nil
                                 }
+                        )
+                    }
+                    .if(editor.selectedItem.kind == .eraser) {
+                        $0.simultaneousGesture(
+                            DragGesture(
+                                minimumDistance: 0,
+                                coordinateSpace: .named(Self.viewportCoordinateSpace)
+                            )
+                            .onChanged { value in
+                                let startLocation = canvasLocation(
+                                    for: value.startLocation,
+                                    canvasSize: geometry.size
+                                )
+                                let location = canvasLocation(
+                                    for: value.location,
+                                    canvasSize: geometry.size
+                                )
+                                let previousLocation = activeEraserLocation
+                                    ?? startLocation
+
+                                editor.erasePenStrokes(
+                                    from: previousLocation,
+                                    to: location,
+                                    width: editor.lineWidth
+                                )
+                                activeEraserLocation = location
+                            }
+                            .onEnded { _ in
+                                activeEraserLocation = nil
+                            }
                         )
                     }
                     .canvasNavigationGestures(
