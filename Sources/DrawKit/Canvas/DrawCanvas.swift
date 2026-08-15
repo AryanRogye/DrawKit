@@ -23,6 +23,7 @@ public struct DrawCanvas: View {
     @State private var magnificationStartOffset: CGSize = .zero
     @State private var isMagnifying = false
     @State private var activePenStrokeIndex: Int?
+    @State private var eraserGestureState = EraserGestureState()
 #if os(macOS)
     @State private var monitor: Any?
 #endif
@@ -135,6 +136,41 @@ public struct DrawCanvas: View {
                                 }
                         )
                     }
+                    .if(editor.selectedItem.kind == .eraser) {
+                        $0.simultaneousGesture(
+                            DragGesture(
+                                minimumDistance: 0,
+                                coordinateSpace: .named(Self.viewportCoordinateSpace)
+                            )
+                            .onChanged { value in
+                                let startLocation = canvasLocation(
+                                    for: value.startLocation,
+                                    canvasSize: geometry.size
+                                )
+                                let location = canvasLocation(
+                                    for: value.location,
+                                    canvasSize: geometry.size
+                                )
+                                let previousLocation = eraserGestureState.advance(
+                                    to: location,
+                                    startingAt: startLocation
+                                )
+
+                                editor.erasePenStrokes(
+                                    from: previousLocation,
+                                    to: location,
+                                    width: editor.lineWidth
+                                )
+                            }
+                            .onEnded { _ in
+                                eraserGestureState.reset()
+                            }
+                        )
+                    }
+                    .onChange(of: editor.selectedItem.kind) { oldKind, newKind in
+                        guard oldKind == .eraser, newKind != .eraser else { return }
+                        eraserGestureState.reset()
+                    }
                     .canvasNavigationGestures(
                         scale: $scale,
                         offset: $offset,
@@ -184,5 +220,21 @@ public struct DrawCanvas: View {
             y: canvasCenter.y
                 + (viewportLocation.y - canvasCenter.y - offset.height) / safeScale
         )
+    }
+}
+
+struct EraserGestureState {
+    private(set) var lastLocation: CGPoint?
+
+    mutating func advance(
+        to location: CGPoint,
+        startingAt startLocation: CGPoint
+    ) -> CGPoint {
+        defer { lastLocation = location }
+        return lastLocation ?? startLocation
+    }
+
+    mutating func reset() {
+        lastLocation = nil
     }
 }

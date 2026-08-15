@@ -14,11 +14,28 @@ enum MarkupItems: Hashable {
     case circle(CirclePoint)
     case triangle(TrianglePoint)
     case pen(PenStroke)
-    
-    var color: Color? {
+    case eraser
+
+    /// id given just for the `ForEach`
+    var id: MarkupItemID {
         switch self {
         case .none:
-            return nil
+            .none
+        case .eraser:
+            .eraser
+        case .rectangle(let point):
+            .markup(point.id)
+        case .circle(let point):
+            .markup(point.id)
+        case .triangle(let point):
+            .markup(point.id)
+        case .pen(let stroke):
+            .markup(stroke.id)
+        }
+    }
+
+    var color: Color? {
+        switch self {
         case .rectangle(let shapePoint):
             return shapePoint.color
         case .circle(let shapePoint):
@@ -27,6 +44,8 @@ enum MarkupItems: Hashable {
             return shapePoint.color
         case .pen(let penStroke):
             return penStroke.color
+        default:
+            return nil
         }
     }
     
@@ -118,6 +137,8 @@ enum MarkupItems: Hashable {
             true
         case .pen:
             false
+        case .eraser:
+            false
         }
     }
     
@@ -133,6 +154,8 @@ enum MarkupItems: Hashable {
                 .triangle
         case .pen(_):
                 .pen
+        case .eraser:
+                .eraser
         }
     }
     
@@ -206,10 +229,17 @@ enum MarkupItems: Hashable {
     }
 }
 
+enum MarkupItemID: Hashable {
+    case none
+    case eraser
+    case markup(UUID)
+}
+
 public enum MarkupRawKind: String {
     case none = "None"
     case pen = "Pen"
     case rectangle = "Rectangle"
     case circle = "Circle"
     case triangle = "Triangle"
+    case eraser = "Eraser"
 }

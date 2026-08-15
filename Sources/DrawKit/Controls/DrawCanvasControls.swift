@@ -19,12 +19,14 @@ public struct DrawCanvasControls: View {
     // while drawing this is split up like this
     private enum MarkupKind: String, CaseIterable {
         case pen
+        case eraser
         case shapes
     }
     
     public var body: some View {
         ZStack {
-            if editor.selectedItem.kind == .pen {
+            if editor.selectedItem.kind == .pen
+                || editor.selectedItem.kind == .eraser {
                 //                    .overlay {
                 HStack {
                     Button {
@@ -94,6 +96,27 @@ public struct DrawCanvasControls: View {
                                 }
                         }
                         .buttonStyle(.plain)
+                    case .eraser:
+                        Button(action: {
+                            editor.select(.eraser, with: selectedColor)
+                        }) {
+                            EraserShape()
+                                .frame(width: 40)
+                                .shadow(
+                                    color: .black.opacity(0.2),
+                                    radius: 5
+                                )
+                                .overlay {
+                                    if editor.selectedItem.kind == .eraser {
+                                        EraserShape()
+                                            .colorMultiply(.accentColor)
+                                            .opacity(0.25)
+                                            .allowsHitTesting(false)
+                                    }
+                                }
+                        }
+                        .buttonStyle(.plain)
+                        .offset(y: 10)
                     case .shapes:
                         ZStack {
                             Button(action: {

@@ -95,6 +95,9 @@ extension DrawEditor {
         switch item {
         case .none:
             return
+        case .eraser:
+            selectedItem = .eraser
+            canvasSelected = nil
         case .pen:
             let pen = PenStroke(
                 id: UUID(),

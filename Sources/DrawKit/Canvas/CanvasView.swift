@@ -23,17 +23,23 @@ struct CanvasView: View {
                     editor.canvasSelected = nil
                 }
             
-            ForEach(Array(editor.items.enumerated()), id: \.offset) { index, item in
+            ForEach(Array(editor.items.enumerated()), id: \.element.id) { index, item in
                 switch item {
                 case .circle(let shapePoint):
                     circle(shapePoint, index: index)
-                        .onTapGesture { editor.canvasSelected = .init(index: index, id: shapePoint.id) }
+                        .onTapGesture {
+                            selectItem(at: index, id: shapePoint.id)
+                        }
                 case .rectangle(let shapePoint):
                     rectangle(shapePoint, index: index)
-                        .onTapGesture { editor.canvasSelected = .init(index: index, id: shapePoint.id)  }
+                        .onTapGesture {
+                            selectItem(at: index, id: shapePoint.id)
+                        }
                 case .triangle(let shapePoint):
                     triangle(shapePoint, index: index)
-                        .onTapGesture { editor.canvasSelected = .init(index: index, id: shapePoint.id) }
+                        .onTapGesture {
+                            selectItem(at: index, id: shapePoint.id)
+                        }
                 case .pen(let stroke):
                     penStroke(stroke, index: index)
                 default:
@@ -65,10 +71,14 @@ struct CanvasView: View {
             ))
         )
         .onTapGesture {
-            // dont allow selected while selected is pen
-            guard editor.selectedItem.kind != .pen else { return }
-            editor.canvasSelected = .init(index: index, id: stroke.id)
+            selectItem(at: index, id: stroke.id)
         }
+    }
+
+    private func selectItem(at index: Int, id: UUID) {
+        guard editor.selectedItem.kind != .pen,
+              editor.selectedItem.kind != .eraser else { return }
+        editor.canvasSelected = .init(index: index, id: id)
     }
 
     private func penPath(for stroke: PenStroke) -> Path {
