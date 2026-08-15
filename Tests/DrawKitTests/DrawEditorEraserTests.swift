@@ -6,6 +6,22 @@ import Testing
 @MainActor
 struct DrawEditorEraserTests {
     @Test
+    func cancelledGestureDoesNotConnectToNextGesture() {
+        var state = EraserGestureState()
+        let firstLocation = CGPoint(x: 10, y: 20)
+        let nextStartLocation = CGPoint(x: 90, y: 80)
+
+        _ = state.advance(to: firstLocation, startingAt: .zero)
+        state.reset()
+        let nextPreviousLocation = state.advance(
+            to: nextStartLocation,
+            startingAt: nextStartLocation
+        )
+
+        #expect(nextPreviousLocation == nextStartLocation)
+    }
+
+    @Test
     func eraserAndPenShareSelectedThickness() throws {
         let editor = makeEditor()
         editor.canvasSize = CGSize(width: 100, height: 100)
