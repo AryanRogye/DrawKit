@@ -60,6 +60,8 @@ enum MarkupItems: Hashable {
         switch self {
         case .rectangle(let rectanglePoint):
             rectanglePoint.cornerRadius
+        case .triangle(let trianglePoint):
+            trianglePoint.cornerRadius
         default:
             nil
         }
@@ -139,6 +141,9 @@ enum MarkupItems: Hashable {
         case .rectangle(var rectanglePoint):
             rectanglePoint.cornerRadius = radius
             self = .rectangle(rectanglePoint)
+        case .triangle(var trianglePoint):
+            trianglePoint.cornerRadius = radius
+            self = .triangle(trianglePoint)
         default:
             break
         }

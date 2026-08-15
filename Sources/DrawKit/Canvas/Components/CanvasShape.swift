@@ -24,7 +24,6 @@ struct CanvasShape<S: Shape>: View {
             .overlay {
                 stroke
             }
-            .position(shapePoint.position)
         
     }
     

@@ -22,6 +22,8 @@ public final class DrawEditor {
     
     internal var resizeStartRect: CGRect?
     internal var dragStartRect: CGRect?
+    internal var activeRotationDetent: Angle?
+    
     var lineWidth: CGFloat = 1
     
     public init(image: SystemImage) {

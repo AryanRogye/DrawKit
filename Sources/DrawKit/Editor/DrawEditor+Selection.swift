@@ -44,7 +44,8 @@ extension DrawEditor {
                 color: color,
                 cornerRadius: shapePoint.cornerRadius,
                 strokeWidth: shapePoint.strokeWidth,
-                strokeColor: shapePoint.strokeColor
+                strokeColor: shapePoint.strokeColor,
+                rotation: shapePoint.rotation
             )
             items[index] = .rectangle(s)
         }
@@ -54,7 +55,8 @@ extension DrawEditor {
                 rect: shapePoint.rect,
                 color: color,
                 strokeWidth: shapePoint.strokeWidth,
-                strokeColor: shapePoint.strokeColor
+                strokeColor: shapePoint.strokeColor,
+                rotation: shapePoint.rotation
             )
             items[index] = .circle(s)
         }
@@ -64,7 +66,9 @@ extension DrawEditor {
                 rect: shapePoint.rect,
                 color: color,
                 strokeWidth: shapePoint.strokeWidth,
-                strokeColor: shapePoint.strokeColor
+                strokeColor: shapePoint.strokeColor,
+                cornerRadius: shapePoint.cornerRadius,
+                rotation: shapePoint.rotation
             )
             items[index] = .triangle(s)
         }
@@ -105,7 +109,8 @@ extension DrawEditor {
                 color: color,
                 cornerRadius: 0,
                 strokeWidth: nil,
-                strokeColor: nil
+                strokeColor: nil,
+                rotation: .degrees(0)
             ))
             items.append(selectedItem)
         case .circle:
@@ -114,7 +119,8 @@ extension DrawEditor {
                     rect: center,
                     color: color,
                     strokeWidth: nil,
-                    strokeColor: nil
+                    strokeColor: nil,
+                    rotation: .degrees(0)
                 )
             )
             items.append(selectedItem)
@@ -124,7 +130,9 @@ extension DrawEditor {
                     rect: center,
                     color: color,
                     strokeWidth: nil,
-                    strokeColor: nil
+                    strokeColor: nil,
+                    cornerRadius: 0,
+                    rotation: .degrees(0)
                 )
             )
             items.append(selectedItem)

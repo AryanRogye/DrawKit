@@ -26,7 +26,7 @@ final class CanvasGestures {
                 let startScale = lastScale.wrappedValue
                 let newScale = min(
                     max(lastScale.wrappedValue * value.magnification, 0.5),
-                    5.0
+                    20.0
                 )
                 let scaleRatio = newScale / startScale
                 let pinchPoint = CGPoint(

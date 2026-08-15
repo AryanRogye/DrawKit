@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct CanvasView: View {
+
+    static let coordinateSpaceName = "DrawKit.CanvasView.canvas"
     
     @Bindable var editor: DrawEditor
     @Binding var scale: CGFloat
@@ -39,6 +41,7 @@ struct CanvasView: View {
                 }
             }
         }
+        .coordinateSpace(name: Self.coordinateSpaceName)
 
     }
     
@@ -89,19 +92,27 @@ struct CanvasView: View {
         
         ZStack {
             CanvasShape(
-                shape: TriangleShape(),
+                shape: TriangleShape(cornerRadius: shapePoint.cornerRadius),
                 shapePoint: shapePoint,
                 selected: selected
             )
             .gesture(editor.dragGesture(for: shapePoint, index: index, kind: .triangle))
+            
+            rotateHandles(
+                isVisible: selected,
+                shapePoint: shapePoint
+            )
             
             resizeHandles(
                 isVisible: selected,
                 shapePoint: shapePoint
             )
         }
+        .frame(width: shapePoint.width, height: shapePoint.height)
+        .rotationEffect(shapePoint.rotation)
+        .position(shapePoint.position)
     }
-    
+
     @ViewBuilder
     private func rectangle(_ shapePoint: RectanglePoint, index: Int) -> some View {
         let selected: Bool = shapePoint.id == editor.canvasSelected?.id
@@ -113,11 +124,19 @@ struct CanvasView: View {
             )
             .gesture(editor.dragGesture(for: shapePoint, index: index, kind: .rectangle))
             
+            rotateHandles(
+                isVisible: selected,
+                shapePoint: shapePoint
+            )
+            
             resizeHandles(
                 isVisible: selected,
                 shapePoint: shapePoint
             )
         }
+        .frame(width: shapePoint.width, height: shapePoint.height)
+        .rotationEffect(shapePoint.rotation)
+        .position(shapePoint.position)
     }
     
     @ViewBuilder
@@ -132,10 +151,35 @@ struct CanvasView: View {
             )
             .gesture(editor.dragGesture(for: shapePoint, index: index, kind: .circle))
             
+            rotateHandles(
+                isVisible: selected,
+                shapePoint: shapePoint
+            )
+            
             resizeHandles(
                 isVisible: selected,
                 shapePoint: shapePoint
             )
+        }
+        .frame(width: shapePoint.width, height: shapePoint.height)
+        .rotationEffect(shapePoint.rotation)
+        .position(shapePoint.position)
+    }
+    
+    @ViewBuilder
+    private func rotateHandles(
+        isVisible: Bool,
+        shapePoint: any ShapePoint
+    ) -> some View {
+        if isVisible {
+            RotateHandleView(zoomScale: scale)
+                .position(CGPoint(
+                    x: shapePoint.width / 2,
+                    y: -15 / max(scale, 0.01)
+                ))
+                .gesture(editor.rotateGesture(
+                    for: shapePoint,
+                ))
         }
     }
     
@@ -145,9 +189,11 @@ struct CanvasView: View {
         shapePoint: any ShapePoint
     ) -> some View {
         if isVisible {
+            let localRect = CGRect(origin: .zero, size: shapePoint.size)
+
             ForEach(ResizeHandle.allCases) { handle in
                 ResizeHandleView(handle: handle, zoomScale: scale)
-                    .position(handle.position(in: shapePoint.rect))
+                    .position(handle.position(in: localRect))
                     .gesture(editor.resizeGesture(
                         for: shapePoint,
                         handle: handle

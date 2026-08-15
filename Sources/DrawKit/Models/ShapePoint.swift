@@ -11,6 +11,7 @@ protocol ShapePoint: Identifiable, Hashable {
     var id: UUID { get }
     var rect: CGRect { get set }
     var color: Color { get }
+    var rotation: Angle { get set }
     
     func mapped(from oldImageRect: CGRect, to newImageRect: CGRect) -> Self
 }
@@ -61,14 +62,16 @@ struct RectanglePoint: ShapePoint {
     var cornerRadius: CGFloat
     var strokeWidth: CGFloat?
     var strokeColor: Color?
+    var rotation: Angle
     
-    init(id: UUID = UUID(), rect: CGRect, color: Color, cornerRadius: CGFloat, strokeWidth: CGFloat?, strokeColor: Color?) {
+    init(id: UUID = UUID(), rect: CGRect, color: Color, cornerRadius: CGFloat, strokeWidth: CGFloat?, strokeColor: Color?, rotation: Angle) {
         self.id = id
         self.rect = rect
         self.color = color
         self.cornerRadius = cornerRadius
         self.strokeWidth = strokeWidth
         self.strokeColor = strokeColor
+        self.rotation = rotation
     }
 
     func mapped(
@@ -84,7 +87,8 @@ struct RectanglePoint: ShapePoint {
             color: color,
             cornerRadius: cornerRadius,
             strokeWidth: strokeWidth,
-            strokeColor: strokeColor
+            strokeColor: strokeColor,
+            rotation: rotation
         )
     }
 }
@@ -96,13 +100,15 @@ struct CirclePoint: ShapePoint {
     var color: Color
     var strokeWidth: CGFloat?
     var strokeColor: Color?
+    var rotation: Angle
     
-    init(id: UUID = UUID(), rect: CGRect, color: Color, strokeWidth: CGFloat?, strokeColor: Color?) {
+    init(id: UUID = UUID(), rect: CGRect, color: Color, strokeWidth: CGFloat?, strokeColor: Color?, rotation: Angle) {
         self.id = id
         self.rect = rect
         self.color = color
         self.strokeWidth = strokeWidth
         self.strokeColor = strokeColor
+        self.rotation = rotation
     }
     
     func mapped(
@@ -117,7 +123,8 @@ struct CirclePoint: ShapePoint {
             ),
             color: color,
             strokeWidth: strokeWidth,
-            strokeColor: strokeColor
+            strokeColor: strokeColor,
+            rotation: rotation
         )
     }
 }
@@ -129,13 +136,17 @@ struct TrianglePoint: ShapePoint {
     var color: Color
     var strokeWidth: CGFloat?
     var strokeColor: Color?
+    var cornerRadius: CGFloat
+    var rotation: Angle
     
-    init(id: UUID = UUID(), rect: CGRect, color: Color, strokeWidth: CGFloat?, strokeColor: Color?) {
+    init(id: UUID = UUID(), rect: CGRect, color: Color, strokeWidth: CGFloat?, strokeColor: Color?, cornerRadius: CGFloat, rotation: Angle) {
         self.id = id
         self.rect = rect
         self.color = color
         self.strokeWidth = strokeWidth
         self.strokeColor = strokeColor
+        self.cornerRadius = cornerRadius
+        self.rotation = rotation
     }
     
     func mapped(
@@ -150,7 +161,9 @@ struct TrianglePoint: ShapePoint {
             ),
             color: color,
             strokeWidth: strokeWidth,
-            strokeColor: strokeColor
+            strokeColor: strokeColor,
+            cornerRadius: cornerRadius,
+            rotation: rotation
         )
     }
 }
