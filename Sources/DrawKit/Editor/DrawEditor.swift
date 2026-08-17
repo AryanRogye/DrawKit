@@ -14,6 +14,7 @@ public final class DrawEditor {
 
     let image: SystemImage
     var canvasSize: CGSize?
+    @ObservationIgnored var history: DrawEditorHistory
     
     var items: [MarkupItems] = []
     
@@ -26,8 +27,15 @@ public final class DrawEditor {
     
     var lineWidth: CGFloat = 1
     
-    public init(image: SystemImage) {
+    /// Creates an editor with a bounded, in-memory canvas history.
+    ///
+    /// - Parameters:
+    ///   - image: The source image to annotate.
+    ///   - historyLimit: The maximum number of edits that can be undone.
+    public init(image: SystemImage, historyLimit: Int = 100) {
+        precondition(historyLimit > 0, "historyLimit must be greater than zero")
         self.image = image
+        self.history = DrawEditorHistory(limit: historyLimit)
     }
     
     var savedCanvasSelected: CanvasSelection?
@@ -60,30 +68,25 @@ public final class DrawEditor {
         guard oldImageRect.width > 0,
               oldImageRect.height > 0 else { return }
 
-        items = items.map { item in
+        items = items.mapped(from: oldImageRect, to: newImageRect)
+        remapHistory(from: oldImageRect, to: newImageRect)
+    }
+}
+
+extension Array where Element == MarkupItems {
+    func mapped(from oldImageRect: CGRect, to newImageRect: CGRect) -> Self {
+        map { item in
             switch item {
             case .rectangle(let shapePoint):
-                return .rectangle(shapePoint.mapped(
-                    from: oldImageRect,
-                    to: newImageRect
-                ))
+                .rectangle(shapePoint.mapped(from: oldImageRect, to: newImageRect))
             case .circle(let shapePoint):
-                return .circle(shapePoint.mapped(
-                    from: oldImageRect,
-                    to: newImageRect
-                ))
+                .circle(shapePoint.mapped(from: oldImageRect, to: newImageRect))
             case .triangle(let shapePoint):
-                return .triangle(shapePoint.mapped(
-                    from: oldImageRect,
-                    to: newImageRect
-                ))
+                .triangle(shapePoint.mapped(from: oldImageRect, to: newImageRect))
             case .pen(let stroke):
-                return .pen(stroke.mapped(
-                    from: oldImageRect,
-                    to: newImageRect
-                ))
+                .pen(stroke.mapped(from: oldImageRect, to: newImageRect))
             default:
-                return item
+                item
             }
         }
     }

@@ -67,13 +67,9 @@ public struct DrawCanvas: View {
                                     self.editor.canvasSelected = nil
                                     self.editor.selectedItem = .none
                                 }
-                                if let selected = editor.canvasSelected,
+                                if editor.canvasSelected != nil,
                                    shortcut == .init(modifier: [], keys: [.delete]) {
-                                    if editor.items.indices.contains(selected.index) {
-                                        editor.items.remove(at: selected.index)
-                                    }
-                                    editor.canvasSelected = nil
-                                    editor.selectedItem = .none
+                                    editor.deleteSelectedItem()
                                 }
                             }
                             
@@ -111,28 +107,17 @@ public struct DrawCanvas: View {
                                     )
 
                                     if activePenStrokeIndex == nil {
-                                        guard case .pen(let pen) = editor.selectedItem else { return }
-
-                                        let stroke = PenStroke(
-                                            id: UUID(),
-                                            points: [startLocation],
-                                            color: pen.color,
-                                            lineWidth: pen.lineWidth
+                                        activePenStrokeIndex = editor.beginPenStroke(
+                                            at: startLocation
                                         )
-                                        editor.items.append(.pen(stroke))
-                                        activePenStrokeIndex = editor.items.count - 1
                                     }
 
-                                    guard let index = activePenStrokeIndex,
-                                          editor.items.indices.contains(index),
-                                          case .pen(var stroke) = editor.items[index] else { return }
-
-                                    stroke.lineWidth = editor.lineWidth
-                                    stroke.points.append(location)
-                                    editor.items[index] = .pen(stroke)
+                                    guard let index = activePenStrokeIndex else { return }
+                                    editor.appendPenPoint(location, at: index)
                                 }
                                 .onEnded { _ in
                                     activePenStrokeIndex = nil
+                                    editor.endPenStroke()
                                 }
                         )
                     }
@@ -143,6 +128,9 @@ public struct DrawCanvas: View {
                                 coordinateSpace: .named(Self.viewportCoordinateSpace)
                             )
                             .onChanged { value in
+                                if eraserGestureState.lastLocation == nil {
+                                    editor.beginHistoryTransaction()
+                                }
                                 let startLocation = canvasLocation(
                                     for: value.startLocation,
                                     canvasSize: geometry.size
@@ -164,12 +152,19 @@ public struct DrawCanvas: View {
                             }
                             .onEnded { _ in
                                 eraserGestureState.reset()
+                                editor.commitHistoryTransaction()
                             }
                         )
                     }
                     .onChange(of: editor.selectedItem.kind) { oldKind, newKind in
-                        guard oldKind == .eraser, newKind != .eraser else { return }
-                        eraserGestureState.reset()
+                        if oldKind == .eraser, newKind != .eraser {
+                            eraserGestureState.reset()
+                            editor.commitHistoryTransaction()
+                        }
+                        if oldKind == .pen, newKind != .pen {
+                            activePenStrokeIndex = nil
+                            editor.commitHistoryTransaction()
+                        }
                     }
                     .canvasNavigationGestures(
                         scale: $scale,

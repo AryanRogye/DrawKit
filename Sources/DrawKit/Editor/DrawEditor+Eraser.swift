@@ -16,14 +16,16 @@ extension DrawEditor {
     ) {
         let eraserRadius = max(width, 0) / 2
 
-        items = items.flatMap { item in
-            guard case .pen(let stroke) = item else {
-                return [item]
-            }
+        performHistoryMutation {
+            items = items.flatMap { item in
+                guard case .pen(let stroke) = item else {
+                    return [item]
+                }
 
-            return stroke
-                .erasing(from: start, to: end, eraserRadius: eraserRadius)
-                .map(MarkupItems.pen)
+                return stroke
+                    .erasing(from: start, to: end, eraserRadius: eraserRadius)
+                    .map(MarkupItems.pen)
+            }
         }
     }
 }

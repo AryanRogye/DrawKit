@@ -47,10 +47,7 @@ public struct CanvasInspector: View {
                 }
                 
                 Button("Delete") {
-                    if editor.items.indices.contains(selected.index) {
-                        editor.items.remove(at: selected.index)
-                    }
-                    editor.canvasSelected = nil
+                    editor.deleteSelectedItem()
                 }
             }
         }
@@ -81,7 +78,7 @@ private struct InspectorStrokeColorWidth: View {
                             editor.items[index].strokeColor ?? strokeColor
                         },
                         set: {
-                            editor.items[index].setStrokeColor($0)
+                            editor.setStrokeColor($0, at: index)
                         }
                     )
                 )
@@ -92,24 +89,31 @@ private struct InspectorStrokeColorWidth: View {
                             editor.items[index].strokeWidth ?? strokeWidth
                         },
                         set: {
-                            editor.items[index].setStrokeWidth($0)
+                            editor.setStrokeWidth($0, at: index)
                         }
                     ),
                     in: 0...10,
-                    step: 1
+                    step: 1,
+                    onEditingChanged: historyEditingChanged
                 )
                 
                 Button("Disable Stroke") {
-                    editor.items[index].setStrokeWidth(nil)
-                    editor.items[index].setStrokeColor(nil)
+                    editor.setStroke(width: nil, color: nil, at: index)
                 }
                 
             } else {
                 Button("Enable Stroke") {
-                    editor.items[index].setStrokeWidth(1)
-                    editor.items[index].setStrokeColor(.blue)
+                    editor.setStroke(width: 1, color: .blue, at: index)
                 }
             }
+        }
+    }
+
+    private func historyEditingChanged(_ isEditing: Bool) {
+        if isEditing {
+            editor.beginHistoryTransaction()
+        } else {
+            editor.commitHistoryTransaction()
         }
     }
 }
@@ -137,16 +141,25 @@ private struct InspectorCornerRadiusSlider: View {
                             cornerRadius
                         },
                         set: {
-                            editor.items[selected.index].setCornerRadius($0)
+                            editor.setCornerRadius($0, at: selected.index)
                         }
                     ),
                     in: 0...(min(width, height) / 2),
-                    step: 1
+                    step: 1,
+                    onEditingChanged: historyEditingChanged
                 )
                 .labelsHidden()
                 .controlSize(.small)
                 .frame(width: 120)
             }
+        }
+    }
+
+    private func historyEditingChanged(_ isEditing: Bool) {
+        if isEditing {
+            editor.beginHistoryTransaction()
+        } else {
+            editor.commitHistoryTransaction()
         }
     }
 }
@@ -171,17 +184,26 @@ private struct InspectorOpacitySlider: View {
                             return color.alpha
                         },
                         set: {
-                            editor.items[index].setOpacity($0)
+                            editor.setOpacity($0, at: index)
                         }
                     ),
                     in: 0...1,
-                    step: 0.1
+                    step: 0.1,
+                    onEditingChanged: historyEditingChanged
                 )
                 .labelsHidden()
                 .controlSize(.small)
                 .frame(width: 120)
             }
             
+        }
+    }
+
+    private func historyEditingChanged(_ isEditing: Bool) {
+        if isEditing {
+            editor.beginHistoryTransaction()
+        } else {
+            editor.commitHistoryTransaction()
         }
     }
 }

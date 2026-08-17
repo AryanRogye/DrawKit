@@ -12,6 +12,7 @@ DrawKit is an embeddable SwiftUI image editor package for iOS and macOS. Add its
 - Add, move, and resize rectangles, circles, and triangles.
 - Select strokes using their visible path instead of their transparent canvas bounds.
 - Edit item opacity and rectangle corner radius in the inspector.
+- Undo and redo canvas edits from controls supplied by the host app.
 - Pan and zoom while keeping drawing input aligned with the pointer.
 - Preserve markup positions when the canvas changes size.
 - Export the image and its markup as a `UIImage` on iOS or an `NSImage` on macOS.
@@ -93,6 +94,30 @@ struct MarkupEditorView: View {
 ```
 
 `DrawCanvasControls` includes the pen, shape, color, and stroke-thickness controls. Selecting an item on the canvas opens the built-in inspector, where supported appearance and geometry properties can be edited or the item can be deleted.
+
+## Undo and Redo
+
+Each editor keeps up to 100 canvas edits by default. Call `undo()` and `redo()` from your own buttons, menus, or keyboard shortcuts; calls with no available history safely do nothing.
+
+```swift
+HStack {
+    Button("Undo") {
+        editor.undo()
+    }
+
+    Button("Redo") {
+        editor.redo()
+    }
+}
+```
+
+Set a different positive history limit when creating the editor:
+
+```swift
+DrawEditor(image: image, historyLimit: 50)
+```
+
+History includes drawing, erasing, adding, deleting, transforming, and changing the appearance of markup. Tool selection, zoom, and other transient controls are not restored by undo or redo.
 
 If you do not need export handling, use the simpler canvas initializer:
 

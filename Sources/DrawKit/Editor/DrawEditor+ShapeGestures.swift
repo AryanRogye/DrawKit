@@ -17,6 +17,7 @@ extension DrawEditor {
             .onChanged { value in
                 guard self.selectedItem.kind != .pen,
                       self.selectedItem.kind != .eraser else { return }
+                self.beginHistoryTransaction()
                 self.handleDrag(
                     shapePoint: shapePoint,
                     value: value,
@@ -26,6 +27,7 @@ extension DrawEditor {
             }
             .onEnded { _ in
                 self.dragStartRect = nil
+                self.commitHistoryTransaction()
             }
     }
     
@@ -34,12 +36,15 @@ extension DrawEditor {
     ) -> some Gesture {
         DragGesture(coordinateSpace: .named(CanvasView.coordinateSpaceName))
             .onChanged { value in
+                self.beginHistoryTransaction()
                 self.handleRotate(
                     shapePoint: shapePoint,
                     value: value
                 )
             }
             .onEnded { _ in
+                self.activeRotationDetent = nil
+                self.commitHistoryTransaction()
             }
     }
     
@@ -52,6 +57,7 @@ extension DrawEditor {
             coordinateSpace: .named(CanvasView.coordinateSpaceName)
         )
             .onChanged { value in
+                self.beginHistoryTransaction()
                 self.handleResize(
                     value: value,
                     shapePoint: shapePoint,
@@ -60,6 +66,7 @@ extension DrawEditor {
             }
             .onEnded { _ in
                 self.resizeStartRect = nil
+                self.commitHistoryTransaction()
             }
     }
     
