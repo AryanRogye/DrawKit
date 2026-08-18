@@ -15,6 +15,7 @@ public final class DrawEditor {
     let image: SystemImage
     var canvasSize: CGSize?
     @ObservationIgnored var history: DrawEditorHistory
+    var defaultSelection: DefaultSelection
     
     var items: [MarkupItems] = []
     
@@ -32,10 +33,12 @@ public final class DrawEditor {
     /// - Parameters:
     ///   - image: The source image to annotate.
     ///   - historyLimit: The maximum number of edits that can be undone.
-    public init(image: SystemImage, historyLimit: Int = 100) {
+    ///   - defaultSelection: when a item is selected, this is the default config thats done to it
+    public init(image: SystemImage, historyLimit: Int = 100, defaultSelection: DefaultSelection = .init()) {
         precondition(historyLimit > 0, "historyLimit must be greater than zero")
         self.image = image
         self.history = DrawEditorHistory(limit: historyLimit)
+        self.defaultSelection = defaultSelection
     }
     
     var savedCanvasSelected: CanvasSelection?

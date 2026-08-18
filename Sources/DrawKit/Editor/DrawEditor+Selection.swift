@@ -112,41 +112,17 @@ extension DrawEditor {
             )
             selectedItem = .pen(pen)
         case .rectangle:
-            selectedItem = .rectangle(.init(
-                rect: center,
-                color: color,
-                cornerRadius: 0,
-                strokeWidth: nil,
-                strokeColor: nil,
-                rotation: .degrees(0)
-            ))
+            selectedItem = .rectangle(defaultSelection.rectSelection.create(at: center, color: color))
             performHistoryMutation {
                 items.append(selectedItem)
             }
         case .circle:
-            selectedItem = .circle(
-                .init(
-                    rect: center,
-                    color: color,
-                    strokeWidth: nil,
-                    strokeColor: nil,
-                    rotation: .degrees(0)
-                )
-            )
+            selectedItem = .circle(defaultSelection.circleSelection.create(at: center, color: color))
             performHistoryMutation {
                 items.append(selectedItem)
             }
         case .triangle:
-            selectedItem = .triangle(
-                .init(
-                    rect: center,
-                    color: color,
-                    strokeWidth: nil,
-                    strokeColor: nil,
-                    cornerRadius: 0,
-                    rotation: .degrees(0)
-                )
-            )
+            selectedItem = .triangle(defaultSelection.triangleSelection.create(at: center, color: color))
             performHistoryMutation {
                 items.append(selectedItem)
             }
