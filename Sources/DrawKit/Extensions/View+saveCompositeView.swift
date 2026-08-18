@@ -43,86 +43,90 @@ private extension View {
         _ imageCompletion: @escaping (SystemImage?) -> Void
     ) -> some View {
         self.onChange(of: didTriggerSave.wrappedValue) { _, shouldSave in
-            #if os(macOS)
-            if shouldSave {
-                guard canvasSize.width > 0,
-                      canvasSize.height > 0,
-                      imageRect.width > 0,
-                      imageRect.height > 0,
-                      outputSize.width > 0,
-                      outputSize.height > 0 else {
-                    imageCompletion(nil)
-                    didTriggerSave.wrappedValue = false
-                    return
-                }
-                beforeSave()
+            guard shouldSave else { return }
+            guard let configuration = CompositeRenderConfiguration(
+                canvasSize: canvasSize,
+                imageRect: imageRect,
+                outputSize: outputSize
+            ) else {
+                imageCompletion(nil)
+                didTriggerSave.wrappedValue = false
+                return
+            }
 
-                let cropOffset = CGSize(
-                    width: (canvasSize.width / 2) - imageRect.midX,
-                    height: (canvasSize.height / 2) - imageRect.midY
-                )
-                
-                let exportView = self
-                    .frame(width: canvasSize.width, height: canvasSize.height)
-                    .offset(cropOffset)
-                    .frame(width: imageRect.width, height: imageRect.height)
-                    .clipped()
-                
-                let renderer = ImageRenderer(content: exportView)
-                renderer.proposedSize = ProposedViewSize(imageRect.size)
-                
-                // Render the fitted image area at the source image's resolution.
-                renderer.scale = outputSize.width / imageRect.width
-                
-                if let nsImage = renderer.nsImage,
-                   let tiffData = nsImage.tiffRepresentation,
-                   let bitmap = NSBitmapImageRep(data: tiffData),
-                   let pngData = bitmap.representation(using: .png, properties: [:]) {
-                    
-                    imageCompletion(NSImage(data: pngData))
-                } else {
-                    imageCompletion(nil)
-                }
-                afterSave()
-                didTriggerSave.wrappedValue = false
-            }
-            #elseif os(iOS)
-            if shouldSave {
-                guard canvasSize.width > 0,
-                      canvasSize.height > 0,
-                      imageRect.width > 0,
-                      imageRect.height > 0,
-                      outputSize.width > 0,
-                      outputSize.height > 0 else {
-                    imageCompletion(nil)
-                    didTriggerSave.wrappedValue = false
-                    return
-                }
-                
-                beforeSave()
-                
-                let cropOffset = CGSize(
-                    width: (canvasSize.width / 2) - imageRect.midX,
-                    height: (canvasSize.height / 2) - imageRect.midY
-                )
-                
-                let exportView = self
-                    .frame(width: canvasSize.width, height: canvasSize.height)
-                    .offset(cropOffset)
-                    .frame(width: imageRect.width, height: imageRect.height)
-                    .clipped()
-                
-                let renderer = ImageRenderer(content: exportView)
-                renderer.proposedSize = ProposedViewSize(imageRect.size)
-                
-                renderer.scale = outputSize.width / imageRect.width
-                
-                imageCompletion(renderer.uiImage)
-                
-                afterSave()
-                didTriggerSave.wrappedValue = false
-            }
-            #endif
+            beforeSave()
+            imageCompletion(CompositeRenderer.render(
+                content: self,
+                configuration: configuration
+            ))
+            afterSave()
+            didTriggerSave.wrappedValue = false
         }
+    }
+}
+
+struct CompositeRenderConfiguration {
+    let canvasSize: CGSize
+    let imageRect: CGRect
+    let outputSize: CGSize
+
+    init?(canvasSize: CGSize, imageRect: CGRect, outputSize: CGSize) {
+        guard canvasSize.width > 0,
+              canvasSize.height > 0,
+              imageRect.width > 0,
+              imageRect.height > 0,
+              outputSize.width > 0,
+              outputSize.height > 0 else { return nil }
+
+        self.canvasSize = canvasSize
+        self.imageRect = imageRect
+        self.outputSize = outputSize
+    }
+
+    var cropOffset: CGSize {
+        CGSize(
+            width: (canvasSize.width / 2) - imageRect.midX,
+            height: (canvasSize.height / 2) - imageRect.midY
+        )
+    }
+
+    var rendererScale: CGFloat {
+        outputSize.width / imageRect.width
+    }
+}
+
+@MainActor
+enum CompositeRenderer {
+    static func render<Content: View>(
+        content: Content,
+        configuration: CompositeRenderConfiguration
+    ) -> SystemImage? {
+        let exportView = content
+            .frame(
+                width: configuration.canvasSize.width,
+                height: configuration.canvasSize.height
+            )
+            .offset(configuration.cropOffset)
+            .frame(
+                width: configuration.imageRect.width,
+                height: configuration.imageRect.height
+            )
+            .clipped()
+
+        let renderer = ImageRenderer(content: exportView)
+        renderer.proposedSize = ProposedViewSize(configuration.imageRect.size)
+        renderer.scale = configuration.rendererScale
+
+#if os(macOS)
+        guard let image = renderer.nsImage,
+              let tiffData = image.tiffRepresentation,
+              let bitmap = NSBitmapImageRep(data: tiffData),
+              let pngData = bitmap.representation(using: .png, properties: [:]) else {
+            return nil
+        }
+        return NSImage(data: pngData)
+#elseif os(iOS)
+        return renderer.uiImage
+#endif
     }
 }

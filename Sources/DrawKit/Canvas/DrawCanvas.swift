@@ -203,17 +203,11 @@ public struct DrawCanvas: View {
         for viewportLocation: CGPoint,
         canvasSize: CGSize
     ) -> CGPoint {
-        let canvasCenter = CGPoint(
-            x: canvasSize.width / 2,
-            y: canvasSize.height / 2
-        )
-        let safeScale = max(scale, 0.01)
-
-        return CGPoint(
-            x: canvasCenter.x
-                + (viewportLocation.x - canvasCenter.x - offset.width) / safeScale,
-            y: canvasCenter.y
-                + (viewportLocation.y - canvasCenter.y - offset.height) / safeScale
+        CanvasNavigation.canvasLocation(
+            for: viewportLocation,
+            canvasSize: canvasSize,
+            scale: scale,
+            offset: offset
         )
     }
 }

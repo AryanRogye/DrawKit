@@ -23,30 +23,15 @@ final class CanvasGestures {
                     isMagnifying.wrappedValue = true
                 }
 
-                let startScale = lastScale.wrappedValue
-                let newScale = min(
-                    max(lastScale.wrappedValue * value.magnification, 0.5),
-                    20.0
+                let transform = CanvasNavigation.magnifiedTransform(
+                    startScale: lastScale.wrappedValue,
+                    magnification: value.magnification,
+                    startOffset: magnificationStartOffset.wrappedValue,
+                    anchor: value.startAnchor,
+                    canvasSize: canvasSize
                 )
-                let scaleRatio = newScale / startScale
-                let pinchPoint = CGPoint(
-                    x: value.startAnchor.x * canvasSize.width,
-                    y: value.startAnchor.y * canvasSize.height
-                )
-                let canvasCenter = CGPoint(
-                    x: canvasSize.width / 2,
-                    y: canvasSize.height / 2
-                )
-                let startOffset = magnificationStartOffset.wrappedValue
-
-                // Keep the content beneath the pinch point stationary while scaling.
-                offset.wrappedValue = CGSize(
-                    width: startOffset.width + (1 - scaleRatio)
-                        * (pinchPoint.x - canvasCenter.x - startOffset.width),
-                    height: startOffset.height + (1 - scaleRatio)
-                        * (pinchPoint.y - canvasCenter.y - startOffset.height)
-                )
-                scale.wrappedValue = newScale
+                offset.wrappedValue = transform.offset
+                scale.wrappedValue = transform.scale
             }
             .onEnded { _ in
                 isMagnifying.wrappedValue = false

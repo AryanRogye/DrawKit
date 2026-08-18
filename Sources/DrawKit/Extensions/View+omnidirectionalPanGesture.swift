@@ -41,7 +41,9 @@ private struct OmnidirectionalPanGestureRepresentable: NSViewRepresentable {
     }
     
     func makeNSView(context: Context) -> NSView {
-        context.coordinator.installMonitorIfNeeded(attachedTo: NSView())
+        let view = MonitoringView()
+        view.coordinator = context.coordinator
+        return context.coordinator.installMonitorIfNeeded(attachedTo: view)
     }
     
     func updateNSView(_ nsView: NSView, context: Context) {}
@@ -49,6 +51,7 @@ private struct OmnidirectionalPanGestureRepresentable: NSViewRepresentable {
     final class Coordinator: NSObject {
         private let action: (CGFloat, CGFloat, NSEvent.Phase) -> Void
         private var eventMonitor: Any?
+        private var monitoredWindowNumber: Int?
         
         init(action: @escaping (CGFloat, CGFloat, NSEvent.Phase) -> Void) {
             self.action = action
@@ -64,14 +67,17 @@ private struct OmnidirectionalPanGestureRepresentable: NSViewRepresentable {
         func installMonitorIfNeeded(attachedTo view: NSView) -> NSView {
             guard eventMonitor == nil else { return view }
             
-            eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { [weak self, weak view] event in
-                guard let self = self,
-                      let v = view,
-                      event.window == v.window else { return event }
-                self.handleScroll(event)
+            eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { [weak self] event in
+                guard let self,
+                      event.windowNumber == monitoredWindowNumber else { return event }
+                handleScroll(event)
                 return event
             }
             return view
+        }
+
+        func updateMonitoredWindowNumber(_ windowNumber: Int?) {
+            monitoredWindowNumber = windowNumber
         }
         
         @inline(__always)
@@ -93,6 +99,15 @@ private struct OmnidirectionalPanGestureRepresentable: NSViewRepresentable {
             
             // Send both deltas to the action
             action(dx, dy, event.phase)
+        }
+    }
+
+    final class MonitoringView: NSView {
+        weak var coordinator: Coordinator?
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            coordinator?.updateMonitoredWindowNumber(window?.windowNumber)
         }
     }
 }

@@ -95,19 +95,13 @@ extension DrawEditor {
             y: shapePoint.rect.midY
         )
         
-        let dx = value.location.x - center.x
-        let dy = value.location.y - center.y
-        
-        let radians = atan2(dy, dx) + .pi / 2
-        var rotation = Angle(radians: radians)
-        
         let threshold = 2.0
-        
-        if let snapAngle = Self.hapticRotations.first(where: {
-            rotation.inThreshold(of: $0, threshold: threshold)
-        }) {
-            rotation = snapAngle
-        }
+        let rotation = ShapeTransform.rotation(
+            around: center,
+            toward: value.location,
+            detents: Self.hapticRotations,
+            threshold: threshold
+        )
         
         handleRotationHaptic(for: rotation)
 
@@ -176,50 +170,12 @@ extension DrawEditor {
               selection.id == shapePoint.id,
               items.indices.contains(selection.index) else { return }
         
-        let minimumSize: CGFloat = 5
-        let cosine = CGFloat(cos(shapePoint.rotation.radians))
-        let sine = CGFloat(sin(shapePoint.rotation.radians))
-        let canvasTranslation = value.translation
-        let localTranslation = CGSize(
-            width: canvasTranslation.width * cosine + canvasTranslation.height * sine,
-            height: -canvasTranslation.width * sine + canvasTranslation.height * cosine
-        )
-
-        var width = resizeStartRect.width
-        var height = resizeStartRect.height
-        var localCenterShift = CGSize.zero
-
-        if handle.movesLeft {
-            width = max(resizeStartRect.width - localTranslation.width, minimumSize)
-            localCenterShift.width = (resizeStartRect.width - width) / 2
-        } else if handle.movesRight {
-            width = max(resizeStartRect.width + localTranslation.width, minimumSize)
-            localCenterShift.width = (width - resizeStartRect.width) / 2
-        }
-
-        if handle.movesTop {
-            height = max(resizeStartRect.height - localTranslation.height, minimumSize)
-            localCenterShift.height = (resizeStartRect.height - height) / 2
-        } else if handle.movesBottom {
-            height = max(resizeStartRect.height + localTranslation.height, minimumSize)
-            localCenterShift.height = (height - resizeStartRect.height) / 2
-        }
-
-        let centerShift = CGSize(
-            width: localCenterShift.width * cosine - localCenterShift.height * sine,
-            height: localCenterShift.width * sine + localCenterShift.height * cosine
-        )
-        let center = CGPoint(
-            x: resizeStartRect.midX + centerShift.width,
-            y: resizeStartRect.midY + centerShift.height
-        )
-        
         var shape = shapePoint
-        shape.rect = CGRect(
-            x: center.x - width / 2,
-            y: center.y - height / 2,
-            width: width,
-            height: height
+        shape.rect = ShapeTransform.resizedRect(
+            from: resizeStartRect,
+            canvasTranslation: value.translation,
+            rotation: shapePoint.rotation,
+            handle: handle
         )
         
         switch items[selection.index] {

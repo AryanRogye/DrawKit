@@ -53,9 +53,12 @@ private struct GestureModifier: ViewModifier {
                 )
             )
             .omnidirectionalPanGesture { dx, dy, phase in
-                guard !isMagnifying else { return }
-                offset.width += dx
-                offset.height += dy
+                offset = CanvasNavigation.pannedOffset(
+                    from: offset,
+                    dx: dx,
+                    dy: dy,
+                    isMagnifying: isMagnifying
+                )
             }
     }
 }
