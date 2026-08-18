@@ -17,9 +17,9 @@ import SwiftUI
 @Observable
 @MainActor
 public class DefaultSelection {
-    var rectSelection = RectangleDefaultSelection()
-    var circleSelection = CircleDefaultSelection()
-    var triangleSelection = TriangleDefaultSelection()
+    public var rectSelection = RectangleDefaultSelection()
+    public var circleSelection = CircleDefaultSelection()
+    public var triangleSelection = TriangleDefaultSelection()
     
     public init() {
         
