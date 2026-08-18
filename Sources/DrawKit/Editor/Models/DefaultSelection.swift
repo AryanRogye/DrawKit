@@ -206,6 +206,8 @@ public class RectangleDefaultSelection {
     }
 }
 
+// MARK: - Rectangle Corner Radius
+
 public struct RectangleDefaultSelectionCornerRadiusView: View {
     @Bindable var rectangleDefaultSelection: RectangleDefaultSelection
     
@@ -216,10 +218,15 @@ public struct RectangleDefaultSelectionCornerRadiusView: View {
     }
     
     public var body: some View {
-        Slider(
-            value: $rectangleDefaultSelection.cornerRadius,
-            in: 0...50
-        )
+        HStack {
+            Text(
+                "Corner Radius: \(rectangleDefaultSelection.cornerRadius, format: .number.precision(.fractionLength(0...1)))"
+            )
+            Slider(
+                value: $rectangleDefaultSelection.cornerRadius,
+                in: 0...50
+            )
+        }
     }
 }
 
@@ -248,18 +255,23 @@ public struct RectangleDefaultSelectionStrokeWidthView: View {
             )
         )
         
-        if rectangleDefaultSelection.strokeWidth != nil {
-            Slider(
-                value: Binding(
-                    get: {
-                        rectangleDefaultSelection.strokeWidth ?? 1
-                    },
-                    set: {
-                        rectangleDefaultSelection.strokeWidth = $0
-                    }
-                ),
-                in: 1...20
-            )
+        if let strokeWidth = rectangleDefaultSelection.strokeWidth {
+            HStack {
+                Text(
+                    "Stroke Width: \(strokeWidth, format: .number.precision(.fractionLength(0...1)))"
+                )
+                Slider(
+                    value: Binding(
+                        get: {
+                            rectangleDefaultSelection.strokeWidth ?? 1
+                        },
+                        set: {
+                            rectangleDefaultSelection.strokeWidth = $0
+                        }
+                    ),
+                    in: 1...20
+                )
+            }
         }
     }
 }
@@ -343,19 +355,24 @@ public struct RectangleDefaultSelectionOverrideColorView: View {
                 )
             )
             
-            Slider(
-                value: Binding(
-                    get: {
-                        rectangleDefaultSelection.overrideColor?.alpha ?? 1
-                    },
-                    set: { opacity in
-                        rectangleDefaultSelection.overrideColor =
-                        rectangleDefaultSelection.overrideColor?
-                            .replacingAlpha(with: opacity)
-                    }
-                ),
-                in: 0...1
-            )
+            HStack {
+                Text(
+                    "Opacity: \(rectangleDefaultSelection.overrideColor?.alpha ?? 1, format: .percent.precision(.fractionLength(0)))"
+                )
+                Slider(
+                    value: Binding(
+                        get: {
+                            rectangleDefaultSelection.overrideColor?.alpha ?? 1
+                        },
+                        set: { opacity in
+                            rectangleDefaultSelection.overrideColor =
+                            rectangleDefaultSelection.overrideColor?
+                                .replacingAlpha(with: opacity)
+                        }
+                    ),
+                    in: 0...1
+                )
+            }
         }
     }
 }
@@ -404,18 +421,23 @@ public struct CircleDefaultSelectionStrokeWidthView: View {
             )
         )
         
-        if circleDefaultSelection.strokeWidth != nil {
-            Slider(
-                value: Binding(
-                    get: {
-                        circleDefaultSelection.strokeWidth ?? 1
-                    },
-                    set: {
-                        circleDefaultSelection.strokeWidth = $0
-                    }
-                ),
-                in: 1...20
-            )
+        if let strokeWidth = circleDefaultSelection.strokeWidth {
+            HStack {
+                Text(
+                    "Stroke Width: \(strokeWidth, format: .number.precision(.fractionLength(0...1)))"
+                )
+                Slider(
+                    value: Binding(
+                        get: {
+                            circleDefaultSelection.strokeWidth ?? 1
+                        },
+                        set: {
+                            circleDefaultSelection.strokeWidth = $0
+                        }
+                    ),
+                    in: 1...20
+                )
+            }
         }
     }
 }
@@ -499,19 +521,24 @@ public struct CircleDefaultSelectionOverrideColorView: View {
                 )
             )
             
-            Slider(
-                value: Binding(
-                    get: {
-                        circleDefaultSelection.overrideColor?.alpha ?? 1
-                    },
-                    set: { opacity in
-                        circleDefaultSelection.overrideColor =
-                        circleDefaultSelection.overrideColor?
-                            .replacingAlpha(with: opacity)
-                    }
-                ),
-                in: 0...1
-            )
+            HStack {
+                Text(
+                    "Opacity: \(circleDefaultSelection.overrideColor?.alpha ?? 1, format: .percent.precision(.fractionLength(0)))"
+                )
+                Slider(
+                    value: Binding(
+                        get: {
+                            circleDefaultSelection.overrideColor?.alpha ?? 1
+                        },
+                        set: { opacity in
+                            circleDefaultSelection.overrideColor =
+                            circleDefaultSelection.overrideColor?
+                                .replacingAlpha(with: opacity)
+                        }
+                    ),
+                    in: 0...1
+                )
+            }
         }
     }
 }
@@ -548,10 +575,15 @@ public struct TriangleDefaultSelectionCornerRadiusView: View {
     }
     
     public var body: some View {
-        Slider(
-            value: $triangleDefaultSelection.cornerRadius,
-            in: 0...50
-        )
+        HStack {
+            Text(
+                "Corner Radius: \(triangleDefaultSelection.cornerRadius, format: .number.precision(.fractionLength(0...1)))"
+            )
+            Slider(
+                value: $triangleDefaultSelection.cornerRadius,
+                in: 0...50
+            )
+        }
     }
 }
 
@@ -580,18 +612,23 @@ public struct TriangleDefaultSelectionStrokeWidthView: View {
             )
         )
         
-        if triangleDefaultSelection.strokeWidth != nil {
-            Slider(
-                value: Binding(
-                    get: {
-                        triangleDefaultSelection.strokeWidth ?? 1
-                    },
-                    set: {
-                        triangleDefaultSelection.strokeWidth = $0
-                    }
-                ),
-                in: 1...20
-            )
+        if let strokeWidth = triangleDefaultSelection.strokeWidth {
+            HStack {
+                Text(
+                    "Stroke Width: \(strokeWidth, format: .number.precision(.fractionLength(0...1)))"
+                )
+                Slider(
+                    value: Binding(
+                        get: {
+                            triangleDefaultSelection.strokeWidth ?? 1
+                        },
+                        set: {
+                            triangleDefaultSelection.strokeWidth = $0
+                        }
+                    ),
+                    in: 1...20
+                )
+            }
         }
     }
 }
@@ -675,19 +712,24 @@ public struct TriangleDefaultSelectionOverrideColorView: View {
                 )
             )
             
-            Slider(
-                value: Binding(
-                    get: {
-                        triangleDefaultSelection.overrideColor?.alpha ?? 1
-                    },
-                    set: { opacity in
-                        triangleDefaultSelection.overrideColor =
-                        triangleDefaultSelection.overrideColor?
-                            .replacingAlpha(with: opacity)
-                    }
-                ),
-                in: 0...1
-            )
+            HStack {
+                Text(
+                    "Opacity: \(triangleDefaultSelection.overrideColor?.alpha ?? 1, format: .percent.precision(.fractionLength(0)))"
+                )
+                Slider(
+                    value: Binding(
+                        get: {
+                            triangleDefaultSelection.overrideColor?.alpha ?? 1
+                        },
+                        set: { opacity in
+                            triangleDefaultSelection.overrideColor =
+                            triangleDefaultSelection.overrideColor?
+                                .replacingAlpha(with: opacity)
+                        }
+                    ),
+                    in: 0...1
+                )
+            }
         }
     }
 }
