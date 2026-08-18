@@ -22,7 +22,165 @@ public class DefaultSelection {
     public var triangleSelection = TriangleDefaultSelection()
     
     public init() {
-        
+
+    }
+
+    /// This init is created for the `Defaults` Framework
+    /// This allows us to do:
+    /// ```swift
+    /// public struct DefaultSelectionBridge: Defaults.Bridge {
+    ///     public typealias Value = DefaultSelection
+    ///     public typealias Serializable = String
+    ///
+    ///     public func serialize(_ value: DrawKit.DefaultSelection?) -> String? {
+    ///         return value?.asString()
+    ///     }
+    ///
+    ///     public func deserialize(_ object: String?) -> DrawKit.DefaultSelection? {
+    ///         return DefaultSelection(fromString: object)
+    ///     }
+    /// }
+    ///
+    /// extension DefaultSelection: Defaults.Serializable {
+    ///     public static let bridge = DefaultSelectionBridge()
+    /// }
+    ///
+    /// extension Defaults.Keys {
+    ///     static let editorDefaultSelection = Key<DefaultSelection>("editor_default_selection", default: .init())
+    /// }
+    /// ```
+    public init(fromString: String?) {
+        guard let fromString,
+              let data = fromString.data(using: .utf8),
+              let storage = try? JSONDecoder().decode(
+                DefaultSelectionStorage.self,
+                from: data
+              ),
+              storage.version == DefaultSelectionStorage.currentVersion else {
+            return
+        }
+
+        rectSelection.cornerRadius = CGFloat(storage.rectangle.cornerRadius ?? 0)
+        rectSelection.strokeWidth = storage.rectangle.strokeWidth.map { CGFloat($0) }
+        rectSelection.strokeColor = storage.rectangle.strokeColor?.color
+        rectSelection.overrideColor = storage.rectangle.overrideColor?.color
+
+        circleSelection.strokeWidth = storage.circle.strokeWidth.map { CGFloat($0) }
+        circleSelection.strokeColor = storage.circle.strokeColor?.color
+        circleSelection.overrideColor = storage.circle.overrideColor?.color
+
+        triangleSelection.cornerRadius = CGFloat(storage.triangle.cornerRadius ?? 0)
+        triangleSelection.strokeWidth = storage.triangle.strokeWidth.map { CGFloat($0) }
+        triangleSelection.strokeColor = storage.triangle.strokeColor?.color
+        triangleSelection.overrideColor = storage.triangle.overrideColor?.color
+    }
+
+    public func asString() -> String? {
+        guard let storage = DefaultSelectionStorage(selection: self),
+              let data = try? JSONEncoder.defaultSelectionEncoder.encode(storage) else {
+            return nil
+        }
+        return String(data: data, encoding: .utf8)
+    }
+}
+
+private struct DefaultSelectionStorage: Codable {
+    static let currentVersion = 1
+
+    let version: Int
+    let rectangle: ShapeStorage
+    let circle: ShapeStorage
+    let triangle: ShapeStorage
+
+    @MainActor
+    init?(selection: DefaultSelection) {
+        guard let rectangle = ShapeStorage(
+            cornerRadius: Double(selection.rectSelection.cornerRadius),
+            strokeWidth: selection.rectSelection.strokeWidth.map { Double($0) },
+            strokeColor: selection.rectSelection.strokeColor,
+            overrideColor: selection.rectSelection.overrideColor
+        ),
+        let circle = ShapeStorage(
+            cornerRadius: nil,
+            strokeWidth: selection.circleSelection.strokeWidth.map { Double($0) },
+            strokeColor: selection.circleSelection.strokeColor,
+            overrideColor: selection.circleSelection.overrideColor
+        ),
+        let triangle = ShapeStorage(
+            cornerRadius: Double(selection.triangleSelection.cornerRadius),
+            strokeWidth: selection.triangleSelection.strokeWidth.map { Double($0) },
+            strokeColor: selection.triangleSelection.strokeColor,
+            overrideColor: selection.triangleSelection.overrideColor
+        ) else {
+            return nil
+        }
+
+        self.version = Self.currentVersion
+        self.rectangle = rectangle
+        self.circle = circle
+        self.triangle = triangle
+    }
+}
+
+private struct ShapeStorage: Codable {
+    let cornerRadius: Double?
+    let strokeWidth: Double?
+    let strokeColor: ColorStorage?
+    let overrideColor: ColorStorage?
+
+    init?(
+        cornerRadius: Double?,
+        strokeWidth: Double?,
+        strokeColor: Color?,
+        overrideColor: Color?
+    ) {
+        let storedStrokeColor: ColorStorage?
+        if let strokeColor {
+            guard let color = ColorStorage(strokeColor) else { return nil }
+            storedStrokeColor = color
+        } else {
+            storedStrokeColor = nil
+        }
+
+        let storedOverrideColor: ColorStorage?
+        if let overrideColor {
+            guard let color = ColorStorage(overrideColor) else { return nil }
+            storedOverrideColor = color
+        } else {
+            storedOverrideColor = nil
+        }
+
+        self.cornerRadius = cornerRadius
+        self.strokeWidth = strokeWidth
+        self.strokeColor = storedStrokeColor
+        self.overrideColor = storedOverrideColor
+    }
+}
+
+private struct ColorStorage: Codable {
+    let red: Double
+    let green: Double
+    let blue: Double
+    let alpha: Double
+
+    init?(_ color: Color) {
+        guard let rgba = color.rgba else { return nil }
+        self.red = Double(rgba.r)
+        self.green = Double(rgba.g)
+        self.blue = Double(rgba.b)
+        self.alpha = Double(rgba.a)
+    }
+
+    var color: Color {
+        Color(red: red, green: green, blue: blue, opacity: alpha)
+    }
+}
+
+private extension JSONEncoder {
+    static var defaultSelectionEncoder: JSONEncoder {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        return encoder
     }
 }
 
@@ -36,7 +194,7 @@ public class RectangleDefaultSelection {
     public var strokeColor : Color?
     public var overrideColor: Color?
     
-    func create(at center: NSRect, color: Color) -> RectanglePoint {
+    func create(at center: CGRect, color: Color) -> RectanglePoint {
         return .init(
             rect: center,
             color: (overrideColor != nil ? overrideColor! : color),
@@ -211,7 +369,7 @@ public class CircleDefaultSelection {
     public var strokeColor : Color?
     public var overrideColor: Color?
     
-    func create(at center: NSRect, color: Color) -> CirclePoint {
+    func create(at center: CGRect, color: Color) -> CirclePoint {
         return .init(
             rect: center,
             color: (overrideColor != nil ? overrideColor! : color),
@@ -368,7 +526,7 @@ public class TriangleDefaultSelection {
     public var strokeColor : Color?
     public var overrideColor: Color?
     
-    func create(at center: NSRect, color: Color) -> TrianglePoint {
+    func create(at center: CGRect, color: Color) -> TrianglePoint {
         .init(
             rect: center,
             color: (overrideColor != nil ? overrideColor! : color),
