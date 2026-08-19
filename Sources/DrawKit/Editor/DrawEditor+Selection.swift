@@ -26,6 +26,7 @@ extension DrawEditor {
         }
     }
 
+    /// - Tag: changeSelectedColorIfNeeded
     public func changeSelectedColorIfNeeded(_ color: Color) {
         if case .pen(let pen) = selectedItem {
             selectedItem = .pen(PenStroke(
@@ -76,6 +77,18 @@ extension DrawEditor {
                 )
                 items[index] = .triangle(shape)
             }
+            if case .arrow(let shapePoint) = items[index] {
+                let shape = ArrowPoint(
+                    id: shapePoint.id,
+                    rect: shapePoint.rect,
+                    color: color,
+                    strokeWidth: shapePoint.strokeWidth,
+                    strokeColor: shapePoint.strokeColor,
+                    cornerRadius: shapePoint.cornerRadius,
+                    rotation: shapePoint.rotation
+                )
+                items[index] = .arrow(shape)
+            }
         }
     }
     
@@ -123,6 +136,22 @@ extension DrawEditor {
             }
         case .triangle:
             selectedItem = .triangle(defaultSelection.triangleSelection.create(at: center, color: color))
+            performHistoryMutation {
+                items.append(selectedItem)
+            }
+        // TODO: Create Default Selection For This
+        case .arrow:
+            selectedItem = .arrow(
+                .init(
+                    id: UUID(),
+                    rect: center,
+                    color: color,
+                    strokeWidth: nil,
+                    strokeColor: nil,
+                    cornerRadius: 0,
+                    rotation: .degrees(0)
+                )
+            )
             performHistoryMutation {
                 items.append(selectedItem)
             }

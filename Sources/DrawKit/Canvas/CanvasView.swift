@@ -10,10 +10,10 @@ import SwiftUI
 struct CanvasView: View {
 
     static let coordinateSpaceName = "DrawKit.CanvasView.canvas"
-    
+
     @Bindable var editor: DrawEditor
     @Binding var scale: CGFloat
-    
+
     var body: some View {
         ZStack {
             Image(image: editor.image)
@@ -22,7 +22,7 @@ struct CanvasView: View {
                 .onTapGesture {
                     editor.canvasSelected = nil
                 }
-            
+
             ForEach(Array(editor.items.enumerated()), id: \.element.id) { index, item in
                 switch item {
                 case .circle(let shapePoint):
@@ -40,9 +40,16 @@ struct CanvasView: View {
                         .onTapGesture {
                             selectItem(at: index, id: shapePoint.id)
                         }
+                case .arrow(let shapePoint):
+                    arrow(shapePoint, index: index)
+                        .onTapGesture {
+                            selectItem(at: index, id: shapePoint.id)
+                        }
                 case .pen(let stroke):
                     penStroke(stroke, index: index)
-                default:
+                case .none:
+                    EmptyView()
+                case .eraser:
                     EmptyView()
                 }
             }
@@ -50,7 +57,7 @@ struct CanvasView: View {
         .coordinateSpace(name: Self.coordinateSpaceName)
 
     }
-    
+
     @ViewBuilder
     private func penStroke(_ stroke: PenStroke, index: Int) -> some View {
         let path = penPath(for: stroke)
@@ -95,11 +102,11 @@ struct CanvasView: View {
 
         return path
     }
-    
+
     @ViewBuilder
     private func triangle(_ shapePoint: TrianglePoint, index: Int) -> some View {
         let selected: Bool = shapePoint.id == editor.canvasSelected?.id
-        
+
         ZStack {
             CanvasShape(
                 shape: TriangleShape(cornerRadius: shapePoint.cornerRadius),
@@ -107,12 +114,12 @@ struct CanvasView: View {
                 selected: selected
             )
             .gesture(editor.dragGesture(for: shapePoint, index: index, kind: .triangle))
-            
+
             rotateHandles(
                 isVisible: selected,
                 shapePoint: shapePoint
             )
-            
+
             resizeHandles(
                 isVisible: selected,
                 shapePoint: shapePoint
@@ -133,12 +140,12 @@ struct CanvasView: View {
                 selected: selected
             )
             .gesture(editor.dragGesture(for: shapePoint, index: index, kind: .rectangle))
-            
+
             rotateHandles(
                 isVisible: selected,
                 shapePoint: shapePoint
             )
-            
+
             resizeHandles(
                 isVisible: selected,
                 shapePoint: shapePoint
@@ -148,11 +155,39 @@ struct CanvasView: View {
         .rotationEffect(shapePoint.rotation)
         .position(shapePoint.position)
     }
-    
+
+    @ViewBuilder
+    private func arrow(_ shapePoint: ArrowPoint, index: Int) -> some View {
+        let selected: Bool = shapePoint.id == editor.canvasSelected?.id
+
+        ZStack {
+            CanvasShape(
+                shape: ArrowShape(cornerRadius: shapePoint.cornerRadius),
+                shapePoint: shapePoint,
+                selected: selected
+            )
+            .gesture(editor.dragGesture(for: shapePoint, index: index, kind: .arrow))
+
+
+            rotateHandles(
+                isVisible: selected,
+                shapePoint: shapePoint
+            )
+
+            resizeHandles(
+                isVisible: selected,
+                shapePoint: shapePoint
+            )
+        }
+        .frame(width: shapePoint.width, height: shapePoint.height)
+        .rotationEffect(shapePoint.rotation)
+        .position(shapePoint.position)
+    }
+
     @ViewBuilder
     private func circle(_ shapePoint: CirclePoint, index: Int) -> some View {
         let selected: Bool = shapePoint.id == editor.canvasSelected?.id
-        
+
         ZStack {
             CanvasShape(
                 shape: Circle(),
@@ -160,12 +195,12 @@ struct CanvasView: View {
                 selected: selected
             )
             .gesture(editor.dragGesture(for: shapePoint, index: index, kind: .circle))
-            
+
             rotateHandles(
                 isVisible: selected,
                 shapePoint: shapePoint
             )
-            
+
             resizeHandles(
                 isVisible: selected,
                 shapePoint: shapePoint
@@ -175,7 +210,7 @@ struct CanvasView: View {
         .rotationEffect(shapePoint.rotation)
         .position(shapePoint.position)
     }
-    
+
     @ViewBuilder
     private func rotateHandles(
         isVisible: Bool,
@@ -192,7 +227,7 @@ struct CanvasView: View {
                 ))
         }
     }
-    
+
     @ViewBuilder
     private func resizeHandles(
         isVisible: Bool,

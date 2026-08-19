@@ -106,17 +106,13 @@ extension DrawEditor {
         handleRotationHaptic(for: rotation)
 
         switch items[selection.index] {
-        case .circle(var circlePoint):
-            circlePoint.rotation = rotation
-            items[selection.index] = .circle(circlePoint)
-        case .rectangle(var rectanglePoint):
-            rectanglePoint.rotation = rotation
-            items[selection.index] = .rectangle(rectanglePoint)
-        case .triangle(var trianglePoint):
-            trianglePoint.rotation = rotation
-            items[selection.index] = .triangle(trianglePoint)
-        default:
-            break
+        case .circle(var circlePoint):          items[selection.index] = .circle(circlePoint.replacingRotation(with: rotation))
+        case .rectangle(var rectanglePoint):    items[selection.index] = .rectangle(rectanglePoint.replacingRotation(with: rotation))
+        case .triangle(var trianglePoint):      items[selection.index] = .triangle(trianglePoint.replacingRotation(with: rotation))
+        case .arrow(var arrowPoint):            items[selection.index] = .arrow(arrowPoint.replacingRotation(with: rotation))
+        case .none:                             break
+        case .pen:                              break
+        case .eraser:                           break
         }
     }
     
@@ -151,7 +147,16 @@ extension DrawEditor {
             if let shape = shape as? TrianglePoint {
                 items[index] = .triangle(shape)
             }
-        default: break
+        case .arrow:
+            if let shape = shape as? ArrowPoint {
+                items[index] = .arrow(shape)
+            }
+        case .none:
+            break
+        case .pen:
+            break
+        case .eraser:
+            break
         }
     }
     
@@ -191,7 +196,15 @@ extension DrawEditor {
             if let shape = shape as? TrianglePoint {
                 items[selection.index] = .triangle(shape)
             }
-        default:
+        case .arrow(_):
+            if let shape = shape as? ArrowPoint {
+                items[selection.index] = .arrow(shape)
+            }
+        case .none:
+            break
+        case .pen:
+            break
+        case .eraser:
             break
         }
     }
