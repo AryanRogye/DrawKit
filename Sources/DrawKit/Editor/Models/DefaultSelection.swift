@@ -193,6 +193,13 @@ public class RectangleDefaultSelection {
     public var strokeWidth : CGFloat?
     public var strokeColor : Color?
     public var overrideColor: Color?
+
+    func setStrokeEnabled(_ isEnabled: Bool) {
+        strokeWidth = isEnabled ? 1 : nil
+        if isEnabled && strokeColor == nil {
+            strokeColor = .black
+        }
+    }
     
     func create(at center: CGRect, color: Color) -> RectanglePoint {
         return .init(
@@ -250,7 +257,7 @@ public struct RectangleDefaultSelectionStrokeWidthView: View {
                     rectangleDefaultSelection.strokeWidth != nil
                 },
                 set: { isEnabled in
-                    rectangleDefaultSelection.strokeWidth = isEnabled ? 1 : nil
+                    rectangleDefaultSelection.setStrokeEnabled(isEnabled)
                 }
             )
         )
@@ -385,6 +392,13 @@ public class CircleDefaultSelection {
     public var strokeWidth : CGFloat?
     public var strokeColor : Color?
     public var overrideColor: Color?
+
+    func setStrokeEnabled(_ isEnabled: Bool) {
+        strokeWidth = isEnabled ? 1 : nil
+        if isEnabled && strokeColor == nil {
+            strokeColor = .black
+        }
+    }
     
     func create(at center: CGRect, color: Color) -> CirclePoint {
         return .init(
@@ -416,7 +430,7 @@ public struct CircleDefaultSelectionStrokeWidthView: View {
                     circleDefaultSelection.strokeWidth != nil
                 },
                 set: { isEnabled in
-                    circleDefaultSelection.strokeWidth = isEnabled ? 1 : nil
+                    circleDefaultSelection.setStrokeEnabled(isEnabled)
                 }
             )
         )
@@ -552,6 +566,13 @@ public class TriangleDefaultSelection {
     public var strokeWidth : CGFloat?
     public var strokeColor : Color?
     public var overrideColor: Color?
+
+    func setStrokeEnabled(_ isEnabled: Bool) {
+        strokeWidth = isEnabled ? 1 : nil
+        if isEnabled && strokeColor == nil {
+            strokeColor = .black
+        }
+    }
     
     func create(at center: CGRect, color: Color) -> TrianglePoint {
         .init(
@@ -607,7 +628,7 @@ public struct TriangleDefaultSelectionStrokeWidthView: View {
                     triangleDefaultSelection.strokeWidth != nil
                 },
                 set: { isEnabled in
-                    triangleDefaultSelection.strokeWidth = isEnabled ? 1 : nil
+                    triangleDefaultSelection.setStrokeEnabled(isEnabled)
                 }
             )
         )

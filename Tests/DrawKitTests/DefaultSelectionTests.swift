@@ -5,6 +5,39 @@ import Testing
 @MainActor
 struct DefaultSelectionTests {
     @Test
+    func enablingStrokeSuppliesFallbackColorForEveryShape() {
+        let defaults = DefaultSelection()
+
+        defaults.rectSelection.setStrokeEnabled(true)
+        defaults.circleSelection.setStrokeEnabled(true)
+        defaults.triangleSelection.setStrokeEnabled(true)
+
+        #expect(defaults.rectSelection.strokeWidth == 1)
+        #expect(colorsMatch(defaults.rectSelection.strokeColor, .black))
+        #expect(defaults.circleSelection.strokeWidth == 1)
+        #expect(colorsMatch(defaults.circleSelection.strokeColor, .black))
+        #expect(defaults.triangleSelection.strokeWidth == 1)
+        #expect(colorsMatch(defaults.triangleSelection.strokeColor, .black))
+    }
+
+    @Test
+    func enablingStrokePreservesConfiguredColor() {
+        let defaults = DefaultSelection()
+        let configuredColor = Color.red
+        defaults.rectSelection.strokeColor = configuredColor
+        defaults.circleSelection.strokeColor = configuredColor
+        defaults.triangleSelection.strokeColor = configuredColor
+
+        defaults.rectSelection.setStrokeEnabled(true)
+        defaults.circleSelection.setStrokeEnabled(true)
+        defaults.triangleSelection.setStrokeEnabled(true)
+
+        #expect(colorsMatch(defaults.rectSelection.strokeColor, configuredColor))
+        #expect(colorsMatch(defaults.circleSelection.strokeColor, configuredColor))
+        #expect(colorsMatch(defaults.triangleSelection.strokeColor, configuredColor))
+    }
+
+    @Test
     func rectangleSelectionAppliesEveryConfiguredDefault() throws {
         let defaults = DefaultSelection()
         let fill = Color(red: 0.2, green: 0.4, blue: 0.6, opacity: 0.35)
