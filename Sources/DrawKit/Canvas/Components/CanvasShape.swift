@@ -11,9 +11,9 @@ struct CanvasShape<S: Shape>: View {
     let shape: S
     let shapePoint: any ShapePoint
     let selected: Bool
-    
+
     var body: some View {
-        
+
         shape
             .fill(shapePoint.color.opacity(1))
             .frame(
@@ -24,20 +24,18 @@ struct CanvasShape<S: Shape>: View {
             .overlay {
                 stroke
             }
-        
+
     }
-    
+
     @ViewBuilder
     var stroke: some View {
-        
-        let (strokeWidth, strokeColor) = switch shapePoint {
-        case let rect as RectanglePoint:
-            (rect.strokeWidth, rect.strokeColor)
-        case let circle as CirclePoint:
-            (circle.strokeWidth, circle.strokeColor)
-        case let triangle as TrianglePoint:
-            (triangle.strokeWidth, triangle.strokeColor)
-        default:
+
+
+
+        let (strokeWidth, strokeColor): (CGFloat?, Color?) =
+        if let stroke = shapePoint as? any StrokeConfigurable {
+            (stroke.strokeWidth, stroke.strokeColor)
+        } else {
             (nil, nil)
         }
 

@@ -12,19 +12,24 @@ struct PenStroke: Identifiable, Hashable {
     var points: [CGPoint]
     var color: Color
     var lineWidth: CGFloat
-    
+
     init() {
         id = UUID()
         points = []
         color = .black
         lineWidth = 1
     }
-    
+
     init(id: UUID, points: [CGPoint], color: Color, lineWidth: CGFloat) {
         self.id = id
         self.points = points
         self.color = color
         self.lineWidth = lineWidth
+    }
+
+    mutating func replacingAlpha(with opacity: CGFloat) -> Self {
+        self.color = color.replacingAlpha(with: opacity)
+        return self
     }
 
     func mapped(

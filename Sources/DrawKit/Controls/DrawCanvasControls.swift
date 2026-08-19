@@ -21,13 +21,12 @@ public struct DrawCanvasControls: View {
         case pen
         case eraser
         case shapes
+        case arrow
     }
     
     public var body: some View {
         ZStack {
-            if editor.selectedItem.kind == .pen
-                || editor.selectedItem.kind == .eraser {
-                //                    .overlay {
+            if editor.selectedItem.kind == .pen || editor.selectedItem.kind == .eraser {
                 HStack {
                     Button {
                         editor.selectedItem = .none
@@ -153,6 +152,23 @@ public struct DrawCanvasControls: View {
                             .offset(x: 20, y: 15)
                             
                         }
+                    case .arrow:
+                        Button(action: {
+                            editor.select(.arrow, with: selectedColor)
+                        }) {
+                            CursorShape()
+                                .frame(width: 40)
+                                .scaleEffect(1.65)
+                                .overlay {
+                                    if editor.selectedItem.kind == .arrow {
+                                        CursorShape(color: .accentColor.opacity(0.2))
+                                            .scaleEffect(1.65)
+                                    }
+                                }
+                        }
+                        .buttonStyle(.plain)
+                        .rotationEffect(.degrees(-43))
+                        .offset(x: -12, y: -7)
                     }
                 }
                 
@@ -173,7 +189,8 @@ public struct DrawCanvasControls: View {
                         ColorCircle(Color(.systemTeal), selected: $selectedColor)
                     }
                 }
-                .padding(8)
+                .padding(.vertical, 8)
+                .padding(.leading, -24)
             }
             .padding(.horizontal, 32)
             .padding(.top, 8)

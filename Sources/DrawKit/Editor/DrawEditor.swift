@@ -80,16 +80,13 @@ extension Array where Element == MarkupItems {
     func mapped(from oldImageRect: CGRect, to newImageRect: CGRect) -> Self {
         map { item in
             switch item {
-            case .rectangle(let shapePoint):
-                .rectangle(shapePoint.mapped(from: oldImageRect, to: newImageRect))
-            case .circle(let shapePoint):
-                .circle(shapePoint.mapped(from: oldImageRect, to: newImageRect))
-            case .triangle(let shapePoint):
-                .triangle(shapePoint.mapped(from: oldImageRect, to: newImageRect))
-            case .pen(let stroke):
-                .pen(stroke.mapped(from: oldImageRect, to: newImageRect))
-            default:
-                item
+            case .rectangle(let shapePoint):    MarkupItems.rectangle(shapePoint.mapped(from: oldImageRect, to: newImageRect))
+            case .circle(let shapePoint):       MarkupItems.circle(shapePoint.mapped(from: oldImageRect, to: newImageRect))
+            case .triangle(let shapePoint):     MarkupItems.triangle(shapePoint.mapped(from: oldImageRect, to: newImageRect))
+            case .arrow(let shapePoint):        MarkupItems.arrow(shapePoint.mapped(from: oldImageRect, to: newImageRect))
+            case .pen(let stroke):              MarkupItems.pen(stroke.mapped(from: oldImageRect, to: newImageRect))
+            case .none:                         item
+            case .eraser:                       item
             }
         }
     }
