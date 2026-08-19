@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 import Testing
 @testable import DrawKit
@@ -11,6 +12,7 @@ struct DefaultSelectionTests {
         defaults.rectSelection.setStrokeEnabled(true)
         defaults.circleSelection.setStrokeEnabled(true)
         defaults.triangleSelection.setStrokeEnabled(true)
+        defaults.arrowSelection.setStrokeEnabled(true)
 
         #expect(defaults.rectSelection.strokeWidth == 1)
         #expect(colorsMatch(defaults.rectSelection.strokeColor, .black))
@@ -18,6 +20,8 @@ struct DefaultSelectionTests {
         #expect(colorsMatch(defaults.circleSelection.strokeColor, .black))
         #expect(defaults.triangleSelection.strokeWidth == 1)
         #expect(colorsMatch(defaults.triangleSelection.strokeColor, .black))
+        #expect(defaults.arrowSelection.strokeWidth == 1)
+        #expect(colorsMatch(defaults.arrowSelection.strokeColor, .black))
     }
 
     @Test
@@ -27,14 +31,17 @@ struct DefaultSelectionTests {
         defaults.rectSelection.strokeColor = configuredColor
         defaults.circleSelection.strokeColor = configuredColor
         defaults.triangleSelection.strokeColor = configuredColor
+        defaults.arrowSelection.strokeColor = configuredColor
 
         defaults.rectSelection.setStrokeEnabled(true)
         defaults.circleSelection.setStrokeEnabled(true)
         defaults.triangleSelection.setStrokeEnabled(true)
+        defaults.arrowSelection.setStrokeEnabled(true)
 
         #expect(colorsMatch(defaults.rectSelection.strokeColor, configuredColor))
         #expect(colorsMatch(defaults.circleSelection.strokeColor, configuredColor))
         #expect(colorsMatch(defaults.triangleSelection.strokeColor, configuredColor))
+        #expect(colorsMatch(defaults.arrowSelection.strokeColor, configuredColor))
     }
 
     @Test
@@ -105,6 +112,29 @@ struct DefaultSelectionTests {
     }
 
     @Test
+    func arrowSelectionAppliesEveryConfiguredDefault() throws {
+        let defaults = DefaultSelection()
+        let fill = Color(red: 0.3, green: 0.6, blue: 0.9, opacity: 0.4)
+        let stroke = Color(red: 0.9, green: 0.3, blue: 0.2, opacity: 0.7)
+        defaults.arrowSelection.cornerRadius = 13
+        defaults.arrowSelection.strokeWidth = 7
+        defaults.arrowSelection.strokeColor = stroke
+        defaults.arrowSelection.overrideColor = fill
+        let editor = makeEditor(defaultSelection: defaults)
+
+        editor.select(.arrow, with: .green)
+
+        let arrow = try arrow(from: try #require(editor.items.first))
+        #expect(arrow.cornerRadius == 13)
+        #expect(arrow.strokeWidth == 7)
+        #expect(colorsMatch(arrow.strokeColor, stroke))
+        #expect(colorsMatch(arrow.color, fill))
+        #expect(abs(arrow.color.alpha - 0.4) < 0.001)
+        #expect(arrow.rotation == .zero)
+        #expect(editor.selectedItem == editor.items.first)
+    }
+
+    @Test
     func selectionUsesRequestedColorWhenOverrideIsDisabled() throws {
         let requestedColor = Color(
             red: 0.25,
@@ -112,7 +142,7 @@ struct DefaultSelectionTests {
             blue: 0.75,
             opacity: 0.4
         )
-        let kinds: [MarkupRawKind] = [.rectangle, .circle, .triangle]
+        let kinds: [MarkupRawKind] = [.rectangle, .circle, .triangle, .arrow]
 
         for kind in kinds {
             let editor = makeEditor(defaultSelection: DefaultSelection())
@@ -124,7 +154,7 @@ struct DefaultSelectionTests {
             #expect(abs(appliedColor.alpha - 0.4) < 0.001)
             #expect(item.strokeWidth == nil)
             #expect(item.strokeColor == nil)
-            if kind == .rectangle || kind == .triangle {
+            if kind == .rectangle || kind == .triangle || kind == .arrow {
                 #expect(item.cornerRadius == 0)
             }
         }
@@ -174,6 +204,20 @@ struct DefaultSelectionTests {
             blue: 0.8,
             opacity: 0.55
         )
+        original.arrowSelection.cornerRadius = 9.75
+        original.arrowSelection.strokeWidth = 4.5
+        original.arrowSelection.strokeColor = Color(
+            red: 0.7,
+            green: 0.2,
+            blue: 0.4,
+            opacity: 0.8
+        )
+        original.arrowSelection.overrideColor = Color(
+            red: 0.2,
+            green: 0.8,
+            blue: 0.7,
+            opacity: 0.5
+        )
 
         let serialized = try #require(original.asString())
         let restored = DefaultSelection(fromString: serialized)
@@ -207,6 +251,16 @@ struct DefaultSelectionTests {
             restored.triangleSelection.overrideColor,
             original.triangleSelection.overrideColor
         ))
+        #expect(restored.arrowSelection.cornerRadius == 9.75)
+        #expect(restored.arrowSelection.strokeWidth == 4.5)
+        #expect(colorsApproximatelyMatch(
+            restored.arrowSelection.strokeColor,
+            original.arrowSelection.strokeColor
+        ))
+        #expect(colorsApproximatelyMatch(
+            restored.arrowSelection.overrideColor,
+            original.arrowSelection.overrideColor
+        ))
     }
 
     @Test
@@ -223,6 +277,54 @@ struct DefaultSelectionTests {
         #expect(restored.triangleSelection.strokeWidth == nil)
         #expect(restored.triangleSelection.strokeColor == nil)
         #expect(restored.triangleSelection.overrideColor == nil)
+        #expect(restored.arrowSelection.strokeWidth == nil)
+        #expect(restored.arrowSelection.strokeColor == nil)
+        #expect(restored.arrowSelection.overrideColor == nil)
+    }
+
+    @Test
+    func versionOneStorageMigratesKnownValuesAndDefaultsArrow() throws {
+        let original = DefaultSelection()
+        original.rectSelection.cornerRadius = 16
+        original.rectSelection.strokeWidth = 5
+        original.rectSelection.strokeColor = .red
+        original.circleSelection.overrideColor = .green.opacity(0.45)
+        original.triangleSelection.cornerRadius = 12
+        original.triangleSelection.strokeWidth = 3
+
+        let legacyStorage = try serializedStorage(
+            from: original,
+            version: 1,
+            removing: "arrow"
+        )
+        let migrated = DefaultSelection(fromString: legacyStorage)
+
+        #expect(migrated.rectSelection.cornerRadius == 16)
+        #expect(migrated.rectSelection.strokeWidth == 5)
+        #expect(colorsApproximatelyMatch(migrated.rectSelection.strokeColor, .red))
+        #expect(colorsApproximatelyMatch(
+            migrated.circleSelection.overrideColor,
+            original.circleSelection.overrideColor
+        ))
+        #expect(migrated.triangleSelection.cornerRadius == 12)
+        #expect(migrated.triangleSelection.strokeWidth == 3)
+        #expect(migrated.arrowSelection.cornerRadius == 0)
+        #expect(migrated.arrowSelection.strokeWidth == nil)
+        #expect(migrated.arrowSelection.strokeColor == nil)
+        #expect(migrated.arrowSelection.overrideColor == nil)
+    }
+
+    @Test
+    func futureStorageVersionUsesSafeDefaults() throws {
+        let original = DefaultSelection()
+        original.rectSelection.cornerRadius = 25
+        original.arrowSelection.strokeWidth = 8
+
+        let futureStorage = try serializedStorage(from: original, version: 999)
+        let restored = DefaultSelection(fromString: futureStorage)
+
+        #expect(restored.rectSelection.cornerRadius == 0)
+        #expect(restored.arrowSelection.strokeWidth == nil)
     }
 
     @Test
@@ -243,7 +345,34 @@ struct DefaultSelectionTests {
             #expect(restored.triangleSelection.strokeWidth == nil)
             #expect(restored.triangleSelection.strokeColor == nil)
             #expect(restored.triangleSelection.overrideColor == nil)
+            #expect(restored.arrowSelection.cornerRadius == 0)
+            #expect(restored.arrowSelection.strokeWidth == nil)
+            #expect(restored.arrowSelection.strokeColor == nil)
+            #expect(restored.arrowSelection.overrideColor == nil)
         }
+    }
+
+    private func serializedStorage(
+        from selection: DefaultSelection,
+        version: Int,
+        removing key: String? = nil
+    ) throws -> String {
+        let serialized = try #require(selection.asString())
+        let data = try #require(serialized.data(using: .utf8))
+        var object = try #require(
+            JSONSerialization.jsonObject(with: data) as? [String: Any]
+        )
+
+        object["version"] = version
+        if let key {
+            object.removeValue(forKey: key)
+        }
+
+        let migratedData = try JSONSerialization.data(
+            withJSONObject: object,
+            options: [.sortedKeys]
+        )
+        return try #require(String(data: migratedData, encoding: .utf8))
     }
 
     private func makeEditor(defaultSelection: DefaultSelection) -> DrawEditor {
@@ -279,6 +408,13 @@ struct DefaultSelectionTests {
             throw UnexpectedDefaultSelectionItemError()
         }
         return triangle
+    }
+
+    private func arrow(from item: MarkupItems) throws -> ArrowPoint {
+        guard case .arrow(let arrow) = item else {
+            throw UnexpectedDefaultSelectionItemError()
+        }
+        return arrow
     }
 
     private func colorsMatch(_ lhs: Color?, _ rhs: Color) -> Bool {

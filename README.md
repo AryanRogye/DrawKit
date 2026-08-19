@@ -9,9 +9,10 @@ DrawKit is an embeddable SwiftUI image editor package for iOS and macOS. Add its
 - Embed the editor in any SwiftUI view and arrange it to fit your app's interface.
 - Keep editor state in a reusable `DrawEditor` instance owned by your app.
 - Draw independent freehand pen strokes with configurable colors and thicknesses.
-- Add, move, and resize rectangles, circles, and triangles.
+- Add, move, resize, and rotate rectangles, circles, triangles, and arrows.
 - Select strokes using their visible path instead of their transparent canvas bounds.
-- Edit item opacity and rectangle corner radius in the inspector.
+- Edit item opacity, stroke appearance, and supported corner radii in the inspector.
+- Configure and persist the default appearance of newly added shapes.
 - Undo and redo canvas edits from controls supplied by the host app.
 - Pan and zoom while keeping drawing input aligned with the pointer.
 - Preserve markup positions when the canvas changes size.
@@ -95,6 +96,25 @@ struct MarkupEditorView: View {
 
 `DrawCanvasControls` includes the pen, shape, color, and stroke-thickness controls. Selecting an item on the canvas opens the built-in inspector, where supported appearance and geometry properties can be edited or the item can be deleted.
 
+## Shape Defaults
+
+Pass a `DefaultSelection` when creating the editor to control the initial appearance of new rectangles, circles, triangles, and arrows. Each shape supports optional fill and stroke overrides; rectangles, triangles, and arrows also support a default corner radius.
+
+```swift
+let shapeDefaults = DefaultSelection()
+shapeDefaults.rectSelection.cornerRadius = 12
+shapeDefaults.arrowSelection.strokeWidth = 2
+shapeDefaults.arrowSelection.strokeColor = .black
+shapeDefaults.arrowSelection.overrideColor = .orange
+
+let editor = DrawEditor(
+    image: image,
+    defaultSelection: shapeDefaults
+)
+```
+
+Use `shapeDefaults.asString()` to serialize these settings and `DefaultSelection(fromString:)` to restore them later.
+
 ## Undo and Redo
 
 Each editor keeps up to 100 canvas edits by default. Call `undo()` and `redo()` from your own buttons, menus, or keyboard shortcuts; calls with no available history safely do nothing.
@@ -144,4 +164,4 @@ See `iOSDrawKitExample` for an iOS example using `PhotosPicker`, or `DrawKitExam
 
 ## License
 
-No license has been added to this repository yet.
+DrawKit is available under the [MIT License](LICENSE).

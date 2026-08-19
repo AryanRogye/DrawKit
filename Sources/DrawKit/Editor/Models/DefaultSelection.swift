@@ -20,7 +20,8 @@ public class DefaultSelection {
     public var rectSelection = RectangleDefaultSelection()
     public var circleSelection = CircleDefaultSelection()
     public var triangleSelection = TriangleDefaultSelection()
-    
+    public var arrowSelection = ArrowDefaultSelection()
+
     public init() {
 
     }
@@ -56,7 +57,7 @@ public class DefaultSelection {
                 DefaultSelectionStorage.self,
                 from: data
               ),
-              storage.version == DefaultSelectionStorage.currentVersion else {
+              (1...DefaultSelectionStorage.currentVersion).contains(storage.version) else {
             return
         }
 
@@ -73,6 +74,11 @@ public class DefaultSelection {
         triangleSelection.strokeWidth = storage.triangle.strokeWidth.map { CGFloat($0) }
         triangleSelection.strokeColor = storage.triangle.strokeColor?.color
         triangleSelection.overrideColor = storage.triangle.overrideColor?.color
+
+        arrowSelection.cornerRadius = CGFloat(storage.arrow.cornerRadius ?? 0)
+        arrowSelection.strokeWidth = storage.arrow.strokeWidth.map { CGFloat($0) }
+        arrowSelection.strokeColor = storage.arrow.strokeColor?.color
+        arrowSelection.overrideColor = storage.arrow.overrideColor?.color
     }
 
     public func asString() -> String? {
@@ -85,12 +91,31 @@ public class DefaultSelection {
 }
 
 private struct DefaultSelectionStorage: Codable {
-    static let currentVersion = 1
+    static let currentVersion = 2
 
     let version: Int
     let rectangle: ShapeStorage
     let circle: ShapeStorage
     let triangle: ShapeStorage
+    let arrow: ShapeStorage
+
+    private enum CodingKeys: String, CodingKey {
+        case version
+        case rectangle
+        case circle
+        case triangle
+        case arrow
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        version = try container.decodeIfPresent(Int.self, forKey: .version) ?? 1
+        rectangle = try container.decodeIfPresent(ShapeStorage.self, forKey: .rectangle) ?? .init()
+        circle = try container.decodeIfPresent(ShapeStorage.self, forKey: .circle) ?? .init()
+        triangle = try container.decodeIfPresent(ShapeStorage.self, forKey: .triangle) ?? .init()
+        arrow = try container.decodeIfPresent(ShapeStorage.self, forKey: .arrow) ?? .init()
+    }
 
     @MainActor
     init?(selection: DefaultSelection) {
@@ -100,18 +125,25 @@ private struct DefaultSelectionStorage: Codable {
             strokeColor: selection.rectSelection.strokeColor,
             overrideColor: selection.rectSelection.overrideColor
         ),
-        let circle = ShapeStorage(
-            cornerRadius: nil,
-            strokeWidth: selection.circleSelection.strokeWidth.map { Double($0) },
-            strokeColor: selection.circleSelection.strokeColor,
-            overrideColor: selection.circleSelection.overrideColor
-        ),
-        let triangle = ShapeStorage(
-            cornerRadius: Double(selection.triangleSelection.cornerRadius),
-            strokeWidth: selection.triangleSelection.strokeWidth.map { Double($0) },
-            strokeColor: selection.triangleSelection.strokeColor,
-            overrideColor: selection.triangleSelection.overrideColor
-        ) else {
+              let circle = ShapeStorage(
+                cornerRadius: nil,
+                strokeWidth: selection.circleSelection.strokeWidth.map { Double($0) },
+                strokeColor: selection.circleSelection.strokeColor,
+                overrideColor: selection.circleSelection.overrideColor
+              ),
+              let arrow = ShapeStorage(
+                cornerRadius: Double(selection.arrowSelection.cornerRadius),
+                strokeWidth: selection.arrowSelection.strokeWidth.map { Double($0) },
+                strokeColor: selection.arrowSelection.strokeColor,
+                overrideColor: selection.arrowSelection.overrideColor
+              ),
+              let triangle = ShapeStorage(
+                cornerRadius: Double(selection.triangleSelection.cornerRadius),
+                strokeWidth: selection.triangleSelection.strokeWidth.map { Double($0) },
+                strokeColor: selection.triangleSelection.strokeColor,
+                overrideColor: selection.triangleSelection.overrideColor
+              )
+        else {
             return nil
         }
 
@@ -119,6 +151,7 @@ private struct DefaultSelectionStorage: Codable {
         self.rectangle = rectangle
         self.circle = circle
         self.triangle = triangle
+        self.arrow = arrow
     }
 }
 
@@ -127,6 +160,13 @@ private struct ShapeStorage: Codable {
     let strokeWidth: Double?
     let strokeColor: ColorStorage?
     let overrideColor: ColorStorage?
+
+    init() {
+        cornerRadius = nil
+        strokeWidth = nil
+        strokeColor = nil
+        overrideColor = nil
+    }
 
     init?(
         cornerRadius: Double?,
@@ -748,6 +788,200 @@ public struct TriangleDefaultSelectionOverrideColorView: View {
                                 .replacingAlpha(with: opacity)
                         }
                     ),
+                    in: 0...1
+                )
+            }
+        }
+    }
+}
+
+// MARK: - Arrow Default Selection
+
+@Observable
+@MainActor
+public final class ArrowDefaultSelection {
+    public var cornerRadius: CGFloat = 0
+    public var strokeWidth : CGFloat?
+    public var strokeColor : Color?
+    public var overrideColor: Color?
+
+    var isStrokeEnabled: Bool {
+        get { strokeWidth != nil }
+        set { setStrokeEnabled(newValue) }
+    }
+
+    var editableStrokeWidth: CGFloat {
+        get { strokeWidth ?? 1 }
+        set { strokeWidth = newValue }
+    }
+
+    var isStrokeColorOverridden: Bool {
+        get { strokeColor != nil }
+        set { strokeColor = newValue ? (strokeColor ?? .black) : nil }
+    }
+
+    var editableStrokeColor: Color {
+        get { strokeColor ?? .black }
+        set { strokeColor = newValue }
+    }
+
+    var isColorOverridden: Bool {
+        get { overrideColor != nil }
+        set { overrideColor = newValue ? (overrideColor ?? .black) : nil }
+    }
+
+    var editableColor: Color {
+        get { overrideColor ?? .black }
+        set { overrideColor = newValue }
+    }
+
+    var overrideOpacity: Double {
+        get { overrideColor?.alpha ?? 1 }
+        set { overrideColor = (overrideColor ?? .black).replacingAlpha(with: newValue) }
+    }
+
+    func setStrokeEnabled(_ isEnabled: Bool) {
+        strokeWidth = isEnabled ? 1 : nil
+        if isEnabled && strokeColor == nil {
+            strokeColor = .black
+        }
+    }
+
+    func create(at center: CGRect, color: Color) -> ArrowPoint {
+        .init(
+            rect: center,
+            color: (overrideColor != nil ? overrideColor! : color),
+            strokeWidth: strokeWidth,
+            strokeColor: strokeColor,
+            cornerRadius: cornerRadius,
+            rotation: .degrees(0)
+        )
+    }
+}
+
+// MARK: - Arrow Corner Radius
+
+public struct ArrowDefaultSelectionCornerRadiusView: View {
+    @Bindable var arrowDefaultSelection: ArrowDefaultSelection
+
+    public init(
+        arrowDefaultSelection: ArrowDefaultSelection
+    ) {
+        self.arrowDefaultSelection = arrowDefaultSelection
+    }
+
+    public var body: some View {
+        HStack {
+            Text(
+                "Corner Radius: \(arrowDefaultSelection.cornerRadius, format: .number.precision(.fractionLength(0...1)))",
+                comment: "Arrow default corner-radius control showing the current value."
+            )
+            Slider(
+                value: $arrowDefaultSelection.cornerRadius,
+                in: 0...50
+            )
+        }
+    }
+}
+
+// MARK: - Arrow Stroke Width
+
+public struct ArrowDefaultSelectionStrokeWidthView: View {
+    @Bindable var arrowDefaultSelection: ArrowDefaultSelection
+
+    public init(
+        arrowDefaultSelection: ArrowDefaultSelection
+    ) {
+        self.arrowDefaultSelection = arrowDefaultSelection
+    }
+
+    public var body: some View {
+        Toggle(isOn: $arrowDefaultSelection.isStrokeEnabled) {
+            Text(
+                "Stroke",
+                comment: "Toggle that enables the default arrow stroke."
+            )
+        }
+
+        if arrowDefaultSelection.isStrokeEnabled {
+            HStack {
+                Text(
+                    "Stroke Width: \(arrowDefaultSelection.editableStrokeWidth, format: .number.precision(.fractionLength(0...1)))",
+                    comment: "Arrow default stroke-width control showing the current value."
+                )
+                Slider(
+                    value: $arrowDefaultSelection.editableStrokeWidth,
+                    in: 1...20
+                )
+            }
+        }
+    }
+}
+
+// MARK: - Arrow Stroke Color
+
+public struct ArrowDefaultSelectionStrokeColorView: View {
+    @Bindable var arrowDefaultSelection: ArrowDefaultSelection
+
+    public init(
+        arrowDefaultSelection: ArrowDefaultSelection
+    ) {
+        self.arrowDefaultSelection = arrowDefaultSelection
+    }
+
+    public var body: some View {
+        Toggle(isOn: $arrowDefaultSelection.isStrokeColorOverridden) {
+            Text(
+                "Override Stroke Color",
+                comment: "Toggle that enables a custom default arrow stroke color."
+            )
+        }
+
+        if arrowDefaultSelection.isStrokeColorOverridden {
+            ColorPicker(selection: $arrowDefaultSelection.editableStrokeColor) {
+                Text(
+                    "Stroke Color",
+                    comment: "Picker for the default arrow stroke color."
+                )
+            }
+        }
+    }
+}
+
+// MARK: - Arrow Override Color
+
+public struct ArrowDefaultSelectionOverrideColorView: View {
+    @Bindable var arrowDefaultSelection: ArrowDefaultSelection
+
+    public init(
+        arrowDefaultSelection: ArrowDefaultSelection
+    ) {
+        self.arrowDefaultSelection = arrowDefaultSelection
+    }
+
+    public var body: some View {
+        Toggle(isOn: $arrowDefaultSelection.isColorOverridden) {
+            Text(
+                "Override Color",
+                comment: "Toggle that enables a custom default arrow fill color."
+            )
+        }
+
+        if arrowDefaultSelection.isColorOverridden {
+            ColorPicker(selection: $arrowDefaultSelection.editableColor) {
+                Text(
+                    "Color",
+                    comment: "Picker for the default arrow fill color."
+                )
+            }
+
+            HStack {
+                Text(
+                    "Opacity: \(arrowDefaultSelection.overrideOpacity, format: .percent.precision(.fractionLength(0)))",
+                    comment: "Arrow default fill-opacity control showing the current percentage."
+                )
+                Slider(
+                    value: $arrowDefaultSelection.overrideOpacity,
                     in: 0...1
                 )
             }

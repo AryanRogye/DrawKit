@@ -139,19 +139,8 @@ extension DrawEditor {
             performHistoryMutation {
                 items.append(selectedItem)
             }
-        // TODO: Create Default Selection For This
         case .arrow:
-            selectedItem = .arrow(
-                .init(
-                    id: UUID(),
-                    rect: center,
-                    color: color,
-                    strokeWidth: nil,
-                    strokeColor: nil,
-                    cornerRadius: 0,
-                    rotation: .degrees(0)
-                )
-            )
+            selectedItem = .arrow(defaultSelection.arrowSelection.create(at: center, color: color))
             performHistoryMutation {
                 items.append(selectedItem)
             }
