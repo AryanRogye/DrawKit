@@ -21,11 +21,13 @@ public final class DrawEditor {
     
     var canvasSelected: CanvasSelection? = nil
     var selectedItem: MarkupItems = .none
-    
+    var selectedHoverItem: MarkupRawKind = .none
+
     internal var resizeStartRect: CGRect?
     internal var dragStartRect: CGRect?
     internal var activeRotationDetent: Angle?
-    
+
+
     var lineWidth: CGFloat = 1
     
     /// Creates an editor with a bounded, in-memory canvas history.

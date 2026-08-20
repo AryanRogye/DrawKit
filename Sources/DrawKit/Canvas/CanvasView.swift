@@ -13,6 +13,7 @@ struct CanvasView: View {
 
     @Bindable var editor: DrawEditor
     @Binding var scale: CGFloat
+    @State private var userMouseLocation: CGPoint? = nil
 
     var body: some View {
         ZStack {
@@ -53,8 +54,23 @@ struct CanvasView: View {
                     EmptyView()
                 }
             }
+
+            if let userMouseLocation, editor.selectedHoverItem != .none {
+                hoverPreview(for: editor.selectedHoverItem, userMouseLocation: userMouseLocation)
+            }
         }
         .coordinateSpace(name: Self.coordinateSpaceName)
+        .onContinuousHover { phase in
+            guard editor.selectedHoverItem != .none else {
+                return
+            }
+            switch phase {
+            case .active(let location):
+                userMouseLocation = location
+            case .ended:
+                userMouseLocation = nil
+            }
+        }
 
     }
 
@@ -209,6 +225,86 @@ struct CanvasView: View {
         .frame(width: shapePoint.width, height: shapePoint.height)
         .rotationEffect(shapePoint.rotation)
         .position(shapePoint.position)
+    }
+
+    @ViewBuilder
+    private func hoverPreview(for item: MarkupRawKind, userMouseLocation: CGPoint) -> some View {
+        switch item {
+        case .none:
+            EmptyView()
+        case .pen:
+            Circle()
+                .stroke(
+                    .black,
+                    style: .init(lineWidth: 1)
+                )
+                .frame(width: editor.lineWidth * 20, height: editor.lineWidth * 20)
+                .position(userMouseLocation)
+        case .rectangle:
+            RoundedRectangle(cornerRadius: editor.defaultSelection.rectSelection.cornerRadius)
+                .fill(editor.defaultSelection.rectSelection.overrideColor ?? .black)
+                .frame(width: 100, height: editor.lineWidth * 100)
+                .overlay {
+                    RoundedRectangle(cornerRadius: editor.defaultSelection.rectSelection.cornerRadius)
+                        .stroke(
+                            editor.defaultSelection.rectSelection.strokeColor ?? .clear,
+                            style: .init(
+                                lineWidth: editor.defaultSelection.rectSelection.strokeWidth ?? 0
+                            )
+                        )
+                }
+                .position(userMouseLocation)
+        case .circle:
+            Circle()
+                .fill(editor.defaultSelection.circleSelection.overrideColor ?? .black)
+                .frame(width: 100, height: 100)
+                .overlay {
+                    Circle()
+                        .stroke(
+                            editor.defaultSelection.circleSelection.strokeColor ?? .clear,
+                            style: .init(
+                                lineWidth: editor.defaultSelection.circleSelection.strokeWidth ?? 0
+                            )
+                        )
+                }
+                .position(userMouseLocation)
+        case .triangle:
+            TriangleShape(cornerRadius: editor.defaultSelection.triangleSelection.cornerRadius)
+                .fill(editor.defaultSelection.triangleSelection.overrideColor ?? .black)
+                .frame(width: 100, height: 100)
+                .overlay {
+                    TriangleShape(cornerRadius: editor.defaultSelection.triangleSelection.cornerRadius)
+                        .stroke(
+                            editor.defaultSelection.triangleSelection.strokeColor ?? .clear,
+                            style: .init(
+                                lineWidth: editor.defaultSelection.triangleSelection.strokeWidth ?? 0
+                            )
+                        )
+                }
+                .position(userMouseLocation)
+        case .arrow:
+            ArrowShape(cornerRadius: editor.defaultSelection.arrowSelection.cornerRadius)
+                .fill(editor.defaultSelection.arrowSelection.overrideColor ?? .black)
+                .frame(width: 100, height: 100)
+                .overlay {
+                    ArrowShape(cornerRadius: editor.defaultSelection.arrowSelection.cornerRadius)
+                        .stroke(
+                            editor.defaultSelection.arrowSelection.strokeColor ?? .clear,
+                            style: .init(
+                                lineWidth: editor.defaultSelection.arrowSelection.strokeWidth ?? 0
+                            )
+                        )
+                }
+                .position(userMouseLocation)
+        case .eraser:
+            Circle()
+                .stroke(
+                    .black,
+                    style: .init(lineWidth: 1)
+                )
+                .frame(width: editor.lineWidth * 20, height: editor.lineWidth * 20)
+                .position(userMouseLocation)
+        }
     }
 
     @ViewBuilder

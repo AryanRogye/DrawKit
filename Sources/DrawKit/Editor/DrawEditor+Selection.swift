@@ -95,22 +95,28 @@ extension DrawEditor {
     public func select(_ item: MarkupRawKind, with color: Color) {
         // make sure we have a canvas to show our things on
         guard let canvasSize else { return }
-        
-        // center rect
-        let center = CGRect(
-            x: canvasSize.width / 2,
-            y: canvasSize.height / 2,
-            width: image.size.width / 5,
-            height: image.size.width / 5
-        )
-        
-        if selectedItem.kind == item {
+
+        if selectedHoverItem == item {
             selectedItem = .none
             canvasSelected = nil
             return
         }
-        
-        switch item {
+
+        selectedHoverItem = item
+    }
+
+    public func placeSelectedTool(at location: CGPoint, color: Color) {
+        // make sure we have a canvas to show our things on
+        guard let canvasSize else { return }
+        // center rect
+        let center = CGRect(
+            x: location.x,
+            y: location.y,
+            width: 100,
+            height: 100
+        )
+
+        switch selectedHoverItem {
         case .none:
             return
         case .eraser:
