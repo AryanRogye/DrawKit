@@ -56,6 +56,7 @@ struct DefaultSelectionTests {
         let editor = makeEditor(defaultSelection: defaults)
 
         editor.select(.rectangle, with: .green)
+        editor.placeSelectedTool(at: CGPoint(x: 250, y: 200))
 
         let rectangle = try rectangle(from: try #require(editor.items.first))
         #expect(rectangle.cornerRadius == 14)
@@ -64,7 +65,7 @@ struct DefaultSelectionTests {
         #expect(colorsMatch(rectangle.color, fill))
         #expect(abs(rectangle.color.alpha - 0.35) < 0.001)
         #expect(rectangle.rotation == .zero)
-        #expect(editor.selectedItem == editor.items.first)
+        #expect(editor.activeTool == editor.items.first)
     }
 
     @Test
@@ -78,6 +79,7 @@ struct DefaultSelectionTests {
         let editor = makeEditor(defaultSelection: defaults)
 
         editor.select(.circle, with: .purple)
+        editor.placeSelectedTool(at: CGPoint(x: 250, y: 200))
 
         let circle = try circle(from: try #require(editor.items.first))
         #expect(circle.strokeWidth == 8)
@@ -85,7 +87,7 @@ struct DefaultSelectionTests {
         #expect(colorsMatch(circle.color, fill))
         #expect(abs(circle.color.alpha - 0.45) < 0.001)
         #expect(circle.rotation == .zero)
-        #expect(editor.selectedItem == editor.items.first)
+        #expect(editor.activeTool == editor.items.first)
     }
 
     @Test
@@ -100,6 +102,7 @@ struct DefaultSelectionTests {
         let editor = makeEditor(defaultSelection: defaults)
 
         editor.select(.triangle, with: .orange)
+        editor.placeSelectedTool(at: CGPoint(x: 250, y: 200))
 
         let triangle = try triangle(from: try #require(editor.items.first))
         #expect(triangle.cornerRadius == 11)
@@ -108,7 +111,7 @@ struct DefaultSelectionTests {
         #expect(colorsMatch(triangle.color, fill))
         #expect(abs(triangle.color.alpha - 0.55) < 0.001)
         #expect(triangle.rotation == .zero)
-        #expect(editor.selectedItem == editor.items.first)
+        #expect(editor.activeTool == editor.items.first)
     }
 
     @Test
@@ -123,6 +126,7 @@ struct DefaultSelectionTests {
         let editor = makeEditor(defaultSelection: defaults)
 
         editor.select(.arrow, with: .green)
+        editor.placeSelectedTool(at: CGPoint(x: 250, y: 200))
 
         let arrow = try arrow(from: try #require(editor.items.first))
         #expect(arrow.cornerRadius == 13)
@@ -131,7 +135,7 @@ struct DefaultSelectionTests {
         #expect(colorsMatch(arrow.color, fill))
         #expect(abs(arrow.color.alpha - 0.4) < 0.001)
         #expect(arrow.rotation == .zero)
-        #expect(editor.selectedItem == editor.items.first)
+        #expect(editor.activeTool == editor.items.first)
     }
 
     @Test
@@ -147,6 +151,7 @@ struct DefaultSelectionTests {
         for kind in kinds {
             let editor = makeEditor(defaultSelection: DefaultSelection())
             editor.select(kind, with: requestedColor)
+            editor.placeSelectedTool(at: CGPoint(x: 250, y: 200))
 
             let item = try #require(editor.items.first)
             let appliedColor = try #require(item.color)

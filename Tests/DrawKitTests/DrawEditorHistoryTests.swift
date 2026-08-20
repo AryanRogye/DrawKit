@@ -119,11 +119,14 @@ struct DrawEditorHistoryTests {
     }
 
     @Test
-    func selectingShapeRecordsItsCreation() {
+    func placingShapeRecordsItsCreation() {
         let editor = makeEditor()
         editor.canvasSize = CGSize(width: 100, height: 100)
 
         editor.select(.rectangle, with: .blue)
+        #expect(editor.items.isEmpty)
+
+        editor.placeSelectedTool(at: CGPoint(x: 50, y: 50))
         #expect(editor.items.count == 1)
 
         editor.undo()
@@ -136,7 +139,7 @@ struct DrawEditorHistoryTests {
     @Test
     func completePenStrokeIsOneUndoStep() throws {
         let editor = makeEditor()
-        editor.selectedItem = .pen(PenStroke(
+        editor.activeTool = .pen(PenStroke(
             id: UUID(),
             points: [],
             color: .black,

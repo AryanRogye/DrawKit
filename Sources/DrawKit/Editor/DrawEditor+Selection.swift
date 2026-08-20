@@ -11,9 +11,9 @@ extension DrawEditor {
     public func changePenLineWidth(to lineWidth: CGFloat) {
         self.lineWidth = lineWidth
 
-        if case .pen(var pen) = selectedItem {
+        if case .pen(var pen) = activeTool {
             pen.lineWidth = lineWidth
-            selectedItem = .pen(pen)
+            activeTool = .pen(pen)
         }
 
         guard let selected = canvasSelected,
@@ -28,8 +28,8 @@ extension DrawEditor {
 
     /// - Tag: changeSelectedColorIfNeeded
     public func changeSelectedColorIfNeeded(_ color: Color) {
-        if case .pen(let pen) = selectedItem {
-            selectedItem = .pen(PenStroke(
+        if case .pen(let pen) = activeTool {
+            activeTool = .pen(PenStroke(
                 id: pen.id,
                 points: [],
                 color: color,
@@ -93,34 +93,55 @@ extension DrawEditor {
     }
     
     public func select(_ item: MarkupRawKind, with color: Color) {
-        // make sure we have a canvas to show our things on
-        guard let canvasSize else { return }
+        guard canvasSize != nil else { return }
 
         if selectedHoverItem == item {
-            selectedItem = .none
+            selectedHoverItem = .none
+            activeTool = .none
             canvasSelected = nil
             return
+        }
+
+        selectedColor = color
+        canvasSelected = nil
+
+        switch item {
+        case .pen:
+            activeTool = .pen(
+                PenStroke(
+                    id: UUID(),
+                    points: [],
+                    color: color,
+                    lineWidth: lineWidth
+                )
+            )
+
+        case .eraser:
+            activeTool = .eraser
+
+        case .rectangle, .circle, .triangle, .arrow, .none:
+            activeTool = .none
         }
 
         selectedHoverItem = item
     }
 
-    public func placeSelectedTool(at location: CGPoint, color: Color) {
-        // make sure we have a canvas to show our things on
-        guard let canvasSize else { return }
-        // center rect
+    public func placeSelectedTool(at location: CGPoint) {
+        let color = self.selectedColor
+
+        let size = CGSize(width: 100, height: 100)
         let center = CGRect(
-            x: location.x,
-            y: location.y,
-            width: 100,
-            height: 100
+            x: location.x - size.width / 2,
+            y: location.y - size.height / 2,
+            width: size.width,
+            height: size.height
         )
 
         switch selectedHoverItem {
         case .none:
             return
         case .eraser:
-            selectedItem = .eraser
+            activeTool = .eraser
             canvasSelected = nil
         case .pen:
             let pen = PenStroke(
@@ -129,32 +150,32 @@ extension DrawEditor {
                 color: color,
                 lineWidth: lineWidth
             )
-            selectedItem = .pen(pen)
+            activeTool = .pen(pen)
         case .rectangle:
-            selectedItem = .rectangle(defaultSelection.rectSelection.create(at: center, color: color))
+            activeTool = .rectangle(defaultSelection.rectSelection.create(at: center, color: color))
             performHistoryMutation {
-                items.append(selectedItem)
+                items.append(activeTool)
             }
         case .circle:
-            selectedItem = .circle(defaultSelection.circleSelection.create(at: center, color: color))
+            activeTool = .circle(defaultSelection.circleSelection.create(at: center, color: color))
             performHistoryMutation {
-                items.append(selectedItem)
+                items.append(activeTool)
             }
         case .triangle:
-            selectedItem = .triangle(defaultSelection.triangleSelection.create(at: center, color: color))
+            activeTool = .triangle(defaultSelection.triangleSelection.create(at: center, color: color))
             performHistoryMutation {
-                items.append(selectedItem)
+                items.append(activeTool)
             }
         case .arrow:
-            selectedItem = .arrow(defaultSelection.arrowSelection.create(at: center, color: color))
+            activeTool = .arrow(defaultSelection.arrowSelection.create(at: center, color: color))
             performHistoryMutation {
-                items.append(selectedItem)
+                items.append(activeTool)
             }
         }
     }
 
     func beginPenStroke(at location: CGPoint) -> Int? {
-        guard case .pen(let pen) = selectedItem else { return nil }
+        guard case .pen(let pen) = activeTool else { return nil }
 
         beginHistoryTransaction()
         let stroke = PenStroke(
@@ -191,7 +212,7 @@ extension DrawEditor {
             items.remove(at: selected.index)
         }
         canvasSelected = nil
-        selectedItem = .none
+        activeTool = .none
     }
 
     func setStrokeColor(_ color: Color?, at index: Int) {

@@ -16,14 +16,18 @@ struct ArrowTests {
     }
 
     @Test
-    func selectionCreatesArrowAndRecordsHistory() throws {
+    func placementCreatesArrowAndRecordsHistory() throws {
         let editor = makeEditor()
         editor.canvasSize = CGSize(width: 200, height: 120)
 
         editor.select(.arrow, with: .blue)
+        #expect(editor.items.isEmpty)
+        #expect(editor.selectedHoverItem == .arrow)
+
+        editor.placeSelectedTool(at: CGPoint(x: 100, y: 60))
 
         let arrow = try arrow(from: #require(editor.items.first))
-        #expect(editor.selectedItem.kind == .arrow)
+        #expect(editor.activeTool.kind == .arrow)
         #expect(arrow.color.equals(.blue))
         #expect(arrow.rotation == .zero)
         #expect(arrow.cornerRadius == 0)

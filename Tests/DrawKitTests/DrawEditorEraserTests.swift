@@ -29,11 +29,11 @@ struct DrawEditorEraserTests {
 
         editor.select(.eraser, with: .black)
 
-        #expect(editor.selectedItem.kind == .eraser)
+        #expect(editor.activeTool.kind == .eraser)
         #expect(editor.lineWidth == 12)
 
         editor.select(.pen, with: .black)
-        let selectedPen = try penStroke(from: editor.selectedItem)
+        let selectedPen = try penStroke(from: editor.activeTool)
         #expect(selectedPen.lineWidth == 12)
     }
 

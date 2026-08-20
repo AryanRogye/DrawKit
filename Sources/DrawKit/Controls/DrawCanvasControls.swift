@@ -10,7 +10,6 @@ import SwiftUI
 public struct DrawCanvasControls: View {
     
     @Bindable var editor: DrawEditor
-    @State private var selectedColor: Color = .black
     
     public init(editor: DrawEditor) {
         self.editor = editor
@@ -26,10 +25,10 @@ public struct DrawCanvasControls: View {
     
     public var body: some View {
         ZStack {
-            if editor.selectedItem.kind == .pen || editor.selectedItem.kind == .eraser {
+            if editor.activeTool.kind == .pen || editor.activeTool.kind == .eraser {
                 HStack {
                     Button {
-                        editor.selectedItem = .none
+                        editor.activeTool = .none
                         editor.canvasSelected = nil
                     } label: {
                         Image(systemName: "xmark")
@@ -78,7 +77,7 @@ public struct DrawCanvasControls: View {
                     switch tool {
                     case .pen:
                         Button(action: {
-                            editor.select(.pen, with: selectedColor)
+                            editor.select(.pen, with: editor.selectedColor)
                         }) {
                             PenShape()
                                 .frame(
@@ -89,7 +88,7 @@ public struct DrawCanvasControls: View {
                                     radius: 5
                                 )
                                 .overlay {
-                                    if editor.selectedItem.kind == .pen {
+                                    if editor.activeTool.kind == .pen {
                                         PenShapeStroke(color: .accentColor.opacity(0.2))
                                     }
                                 }
@@ -97,7 +96,7 @@ public struct DrawCanvasControls: View {
                         .buttonStyle(.plain)
                     case .eraser:
                         Button(action: {
-                            editor.select(.eraser, with: selectedColor)
+                            editor.select(.eraser, with: editor.selectedColor)
                         }) {
                             EraserShape()
                                 .frame(width: 40)
@@ -106,7 +105,7 @@ public struct DrawCanvasControls: View {
                                     radius: 5
                                 )
                                 .overlay {
-                                    if editor.selectedItem.kind == .eraser {
+                                    if editor.activeTool.kind == .eraser {
                                         EraserShape()
                                             .colorMultiply(.accentColor)
                                             .opacity(0.25)
@@ -119,33 +118,33 @@ public struct DrawCanvasControls: View {
                     case .shapes:
                         ZStack {
                             Button(action: {
-                                editor.select(.rectangle, with: selectedColor)
+                                editor.select(.rectangle, with: editor.selectedColor)
                             }) {
                                 CanvasControlsShape(
                                     shape: RoundedRectangle(cornerRadius: 12),
-                                    selected: editor.selectedItem.kind == .rectangle
+                                    selected: editor.activeTool.kind == .rectangle
                                 )
                             }
                             .buttonStyle(.plain)
                             
                             
                             Button(action: {
-                                editor.select(.circle, with: selectedColor)
+                                editor.select(.circle, with: editor.selectedColor)
                             }) {
                                 CanvasControlsShape(
                                     shape: Circle(),
-                                    selected: editor.selectedItem.kind == .circle
+                                    selected: editor.activeTool.kind == .circle
                                 )
                             }
                             .buttonStyle(.plain)
                             .offset(x: -20, y: 25)
                             
                             Button(action: {
-                                editor.select(.triangle, with: selectedColor)
+                                editor.select(.triangle, with: editor.selectedColor)
                             }) {
                                 CanvasControlsShape(
                                     shape: TriangleShape(),
-                                    selected: editor.selectedItem.kind == .triangle
+                                    selected: editor.activeTool.kind == .triangle
                                 )
                             }
                             .buttonStyle(.plain)
@@ -154,13 +153,13 @@ public struct DrawCanvasControls: View {
                         }
                     case .arrow:
                         Button(action: {
-                            editor.select(.arrow, with: selectedColor)
+                            editor.select(.arrow, with: editor.selectedColor)
                         }) {
                             CursorShape()
                                 .frame(width: 40)
                                 .scaleEffect(1.65)
                                 .overlay {
-                                    if editor.selectedItem.kind == .arrow {
+                                    if editor.activeTool.kind == .arrow {
                                         CursorShape(color: .accentColor.opacity(0.2))
                                             .scaleEffect(1.65)
                                     }
@@ -175,18 +174,18 @@ public struct DrawCanvasControls: View {
                 // Color Picker Here
                 VStack {
                     HStack {
-                        ColorCircle(Color(.systemRed), selected: $selectedColor)
-                        ColorCircle(Color(.systemOrange), selected: $selectedColor)
-                        ColorCircle(Color(.systemYellow), selected: $selectedColor)
-                        ColorCircle(Color(.systemGreen), selected: $selectedColor)
-                        ColorCircle(Color(.black), selected: $selectedColor)
+                        ColorCircle(Color(.systemRed), selected: $editor.selectedColor)
+                        ColorCircle(Color(.systemOrange), selected: $editor.selectedColor)
+                        ColorCircle(Color(.systemYellow), selected: $editor.selectedColor)
+                        ColorCircle(Color(.systemGreen), selected: $editor.selectedColor)
+                        ColorCircle(Color(.black), selected: $editor.selectedColor)
                     }
                     HStack {
-                        ColorCircle(Color(.systemCyan), selected: $selectedColor)
-                        ColorCircle(Color(.systemPurple), selected: $selectedColor)
-                        ColorCircle(Color(.systemPink), selected: $selectedColor)
-                        ColorCircle(Color(.systemGray), selected: $selectedColor)
-                        ColorCircle(Color(.systemTeal), selected: $selectedColor)
+                        ColorCircle(Color(.systemCyan), selected: $editor.selectedColor)
+                        ColorCircle(Color(.systemPurple), selected: $editor.selectedColor)
+                        ColorCircle(Color(.systemPink), selected: $editor.selectedColor)
+                        ColorCircle(Color(.systemGray), selected: $editor.selectedColor)
+                        ColorCircle(Color(.systemTeal), selected: $editor.selectedColor)
                     }
                 }
                 .padding(.vertical, 8)
@@ -210,15 +209,15 @@ public struct DrawCanvasControls: View {
             }
             .padding(.bottom, 8)
         }
-        .animation(.spring, value: editor.selectedItem.kind)
+        .animation(.spring, value: editor.activeTool.kind)
         .onChange(of: editor.canvasSelected) { _, newValue in
             if let newValue {
                 if let color = editor.items[newValue.index].color {
-                    self.selectedColor = color
+                    self.editor.selectedColor = color
                 }
             }
         }
-        .onChange(of: selectedColor) { _, newValue in
+        .onChange(of: editor.selectedColor) { _, newValue in
             editor.changeSelectedColorIfNeeded(newValue)
         }
     }

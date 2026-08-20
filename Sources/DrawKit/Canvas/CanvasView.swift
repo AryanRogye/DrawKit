@@ -55,10 +55,30 @@ struct CanvasView: View {
                 }
             }
 
-            if let userMouseLocation, editor.selectedHoverItem != .none {
-                hoverPreview(for: editor.selectedHoverItem, userMouseLocation: userMouseLocation)
+            if editor.selectedHoverItem != .none {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .highPriorityGesture(
+                        SpatialTapGesture(
+                            coordinateSpace: .named(Self.coordinateSpaceName)
+                        )
+                        .onEnded { value in
+                            editor.placeSelectedTool(at: value.location)
+                        }
+                    )
+                    .zIndex(1)
+
+                if let userMouseLocation {
+                    hoverPreview(
+                        for: editor.selectedHoverItem,
+                        userMouseLocation: userMouseLocation
+                    )
+                    .allowsHitTesting(false)
+                    .zIndex(2)
+                }
             }
         }
+        .contentShape(Rectangle())
         .coordinateSpace(name: Self.coordinateSpaceName)
         .onContinuousHover { phase in
             guard editor.selectedHoverItem != .none else {
@@ -99,8 +119,8 @@ struct CanvasView: View {
     }
 
     private func selectItem(at index: Int, id: UUID) {
-        guard editor.selectedItem.kind != .pen,
-              editor.selectedItem.kind != .eraser else { return }
+        guard editor.activeTool.kind != .pen,
+              editor.activeTool.kind != .eraser else { return }
         editor.canvasSelected = .init(index: index, id: id)
     }
 

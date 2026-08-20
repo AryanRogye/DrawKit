@@ -65,7 +65,7 @@ public struct DrawCanvas: View {
                             if let shortcut = LocalShortcuts.Shortcut.from(event: event) {
                                 if shortcut == .init(modifier: [], keys: [.escape]) {
                                     self.editor.canvasSelected = nil
-                                    self.editor.selectedItem = .none
+                                    self.editor.activeTool = .none
                                 }
                                 if editor.canvasSelected != nil,
                                    shortcut == .init(modifier: [], keys: [.delete]) {
@@ -93,7 +93,17 @@ public struct DrawCanvas: View {
                     .onChange(of: geometry.size) { _, newSize in
                         editor.updateCanvasSize(newSize)
                     }
-                    .if(editor.selectedItem.kind == .pen) {
+                    .onChange(of: editor.selectedHoverItem) { oldTool, newTool in
+                        if oldTool == .eraser, newTool != .eraser {
+                            eraserGestureState.reset()
+                            editor.commitHistoryTransaction()
+                        }
+                        if oldTool == .pen, newTool != .pen {
+                            activePenStrokeIndex = nil
+                            editor.commitHistoryTransaction()
+                        }
+                    }
+                    .if(editor.selectedHoverItem == .pen) {
                         $0.simultaneousGesture(
                             DragGesture(coordinateSpace: .named(Self.viewportCoordinateSpace))
                                 .onChanged { value in
@@ -121,7 +131,7 @@ public struct DrawCanvas: View {
                                 }
                         )
                     }
-                    .if(editor.selectedItem.kind == .eraser) {
+                    .if(editor.selectedHoverItem == .eraser) {
                         $0.simultaneousGesture(
                             DragGesture(
                                 minimumDistance: 0,
@@ -156,7 +166,7 @@ public struct DrawCanvas: View {
                             }
                         )
                     }
-                    .onChange(of: editor.selectedItem.kind) { oldKind, newKind in
+                    .onChange(of: editor.activeTool.kind) { oldKind, newKind in
                         if oldKind == .eraser, newKind != .eraser {
                             eraserGestureState.reset()
                             editor.commitHistoryTransaction()

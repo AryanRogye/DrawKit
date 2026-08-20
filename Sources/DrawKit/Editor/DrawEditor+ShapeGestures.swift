@@ -15,8 +15,8 @@ extension DrawEditor {
     ) -> some Gesture {
         DragGesture(coordinateSpace: .named(CanvasView.coordinateSpaceName))
             .onChanged { value in
-                guard self.selectedItem.kind != .pen,
-                      self.selectedItem.kind != .eraser else { return }
+                guard self.activeTool.kind != .pen,
+                      self.activeTool.kind != .eraser else { return }
                 self.beginHistoryTransaction()
                 self.handleDrag(
                     shapePoint: shapePoint,

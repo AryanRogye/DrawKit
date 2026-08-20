@@ -20,8 +20,9 @@ public final class DrawEditor {
     var items: [MarkupItems] = []
     
     var canvasSelected: CanvasSelection? = nil
-    var selectedItem: MarkupItems = .none
+    var activeTool: MarkupItems = .none
     var selectedHoverItem: MarkupRawKind = .none
+    var selectedColor: Color = .black
 
     internal var resizeStartRect: CGRect?
     internal var dragStartRect: CGRect?
